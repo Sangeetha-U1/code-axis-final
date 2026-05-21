@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    /* ---- PROFILE PAGE STYLES ---- */
+
+    /* Cover / Hero */
+    .profile-cover {
+      background: linear-gradient(135deg, #3730A3 0%, #4F46E5 50%, #7C3AED 100%);
+      border-radius: var(--radius-xl);
+      height: 180px;
+      position: relative;
+      margin-bottom: 70px;
+      overflow: hidden;
+    }
+    .profile-cover::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .cover-edit-btn {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: white; padding: 7px 16px; border-radius: var(--radius-md);
+      font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: var(--transition);
+      backdrop-filter: blur(4px);
+    }
+    .cover-edit-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* Avatar Section */
+    .profile-avatar-section {
+      position: absolute;
+      bottom: -56px; left: 36px;
+      display: flex; align-items: flex-end; gap: 18px;
+    }
+    .profile-avatar-wrap {
+      position: relative; width: 100px; height: 100px;
+    }
+    .profile-avatar-main {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-primary); font-size: 2rem; font-weight: 700;
+      color: white; border: 4px solid var(--surface);
+      box-shadow: var(--shadow-md);
+    }
+    .avatar-edit-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: var(--transition); cursor: pointer;
+      font-size: 1.2rem;
+    }
+    .profile-avatar-wrap:hover .avatar-edit-overlay { opacity: 1; }
+    .online-badge {
+      position: absolute; bottom: 6px; right: 6px;
+      width: 16px; height: 16px; background: var(--success);
+      border-radius: 50%; border: 3px solid var(--surface);
+    }
+
+    .profile-name-block { padding-bottom: 10px; }
+    .profile-name-block h1 {
+      font-family: var(--font-primary); font-size: 1.4rem;
+      font-weight: 700; color: var(--text-primary); margin-bottom: 3px;
+    }
+    .profile-name-block .profile-role {
+      font-size: 0.85rem; color: var(--text-secondary);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Profile Actions Bar */
+    .profile-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-bottom: 28px; flex-wrap: wrap;
+    }
+
+    /* Tab Nav */
+    .profile-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .profile-tab {
+      padding: 10px 20px; font-size: 0.875rem; font-weight: 500;
+      color: var(--text-secondary); cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: var(--transition); display: flex; align-items: center; gap: 7px;
+    }
+    .profile-tab:hover { color: var(--primary); }
+    .profile-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* Tab Panels */
+    .profile-panel { display: none; }
+    .profile-panel.active { display: block; }
+
+    /* Info Cards */
+    .info-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 20px;
+    }
+    .info-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .info-section-title {
+      font-family: var(--font-primary); font-size: 0.95rem; font-weight: 700;
+      color: var(--text-primary);
+    }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    
+    .info-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+    .info-value { font-size: 0.9rem; color: var(--text-primary); font-weight: 500;
+      display: flex; align-items: center; gap: 7px; }
+    .info-badge-role {
+      background: var(--primary-bg); color: var(--primary);
+      font-size: 0.75rem; font-weight: 600; padding: 2px 10px;
+      border-radius: var(--radius-full);
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 18px 16px; text-align: center;
+      transition: var(--transition);
+    }
+    .stat-box:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .stat-box-num {
+      font-family: var(--font-primary); font-size: 1.6rem; font-weight: 700;
+      color: var(--text-primary); line-height: 1.1; margin-bottom: 4px;
+    }
+    .stat-box-lbl { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; }
+
+    /* Activity Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item {
+      display: flex; gap: 16px; padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .timeline-body { flex: 1; }
+    .timeline-text { font-size: 0.875rem; color: var(--text-primary); margin-bottom: 3px; line-height: 1.4; }
+    .timeline-time { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Skills Section */
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-tag {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-full); padding: 5px 14px;
+      font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);
+      transition: var(--transition); cursor: default;
+    }
+    .skill-tag:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+    .skill-tag.primary { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+
+    /* Performance Chart Bars */
+    .perf-item { margin-bottom: 14px; }
+    .perf-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.82rem; color: var(--text-secondary); font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .profile-tabs { overflow-x: auto; }
+      .profile-avatar-section { left: 20px; }
+      .cover-layout { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html"        class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html"       class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html"         class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html"            class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html"         class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="notifications.html" class="nav-item"><span class="nav-icon">🔔</span><span class="nav-label">Notifications</span><span class="nav-badge">7</span></a>
+      <a href="profile.html"       class="nav-item active"><span class="nav-icon">👤</span><span class="nav-label">My Profile</span></a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="mainContent">
+
+    <!-- TOP NAVBAR -->
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">My Profile</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Profile</span></div>
+        </div>
+      </div>
+      <div class="navbar-right" style="position:relative;">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">
+          🔔<span class="notification-dot"></span>
+        </button>
+        <div class="user-avatar" id="userAvatarBtn">SG</div>
+        <div class="dropdown-menu" id="userMenu">
+          <a href="profile.html" class="dropdown-item">👤 My Profile</a>
+          <a href="settings.html" class="dropdown-item">⚙️ Settings</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel">
+          <div class="notif-header">
+            <span style="font-weight:600;font-size:0.9rem;">Notifications</span>
+            <span style="font-size:0.78rem;color:var(--primary);cursor:pointer;">Mark all read</span>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-dot"></div>
+            <div class="notif-content">
+              <div class="notif-text">New task assigned: Dashboard Redesign</div>
+              <div class="notif-time">2 min ago</div>
+            </div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-dot"></div>
+            <div class="notif-content">
+              <div class="notif-text">Monthly report has been generated</div>
+              <div class="notif-time">2 hours ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot" style="background:transparent;border:2px solid var(--border);"></div>
+            <div class="notif-content">
+              <div class="notif-text">Project milestone reached: 50%</div>
+              <div class="notif-time">Yesterday</div>
+            </div>
+          </div>
+          <div style="padding:12px 18px;text-align:center;">
+            <a href="notifications.html" style="font-size:0.82rem;color:var(--primary);font-weight:600;">View all →</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <div class="content-area">
+
+      <!-- Cover Photo Section -->
+      <div style="position:relative;margin-bottom:80px;">
+        <div class="profile-cover">
+          <button class="cover-edit-btn" onclick="showToast('Cover photo upload coming soon!','info')">📷 Edit Cover</button>
+
+          <!-- Avatar overlapping cover -->
+          <div class="profile-avatar-section">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar-main">SG</div>
+              <div class="avatar-edit-overlay" onclick="showToast('Profile photo upload coming soon!','info')">📷</div>
+              <div class="online-badge"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Name + Actions row (below cover) -->
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px;margin-top:12px;flex-wrap:wrap;gap:12px;">
+          <div style="padding-left:136px;">
+            <h1 style="font-family:var(--font-primary);font-size:1.4rem;font-weight:700;margin-bottom:3px;">Sangeetha Devi</h1>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="info-badge-role">🎨 UI/UX Designer</span>
+              <span style="font-size:0.82rem;color:var(--text-secondary);">📍 Design Department</span>
+              <span style="font-size:0.82rem;color:var(--success);font-weight:500;">● Online</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline btn-sm" onclick="switchProfileTab('edit')">✏️ Edit Profile</button>
+            <button class="btn btn-primary btn-sm">📤 Share Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:var(--primary);">32</div>
+          <div class="stat-box-lbl">Tasks Completed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:var(--success);">96%</div>
+          <div class="stat-box-lbl">Attendance Rate</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:var(--warning);">4</div>
+          <div class="stat-box-lbl">Active Projects</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-num" style="color:var(--info);">98</div>
+          <div class="stat-box-lbl">Performance Score</div>
+        </div>
+      </div>
+
+      <!-- Profile Tabs -->
+      <div class="profile-tabs" id="profileTabs">
+        <div class="profile-tab active" onclick="switchProfileTab('overview')" id="ptab-overview">🏠 Overview</div>
+        <div class="profile-tab" onclick="switchProfileTab('edit')"     id="ptab-edit">✏️ Edit Profile</div>
+        <div class="profile-tab" onclick="switchProfileTab('security')" id="ptab-security">🔒 Security</div>
+        <div class="profile-tab" onclick="switchProfileTab('activity')" id="ptab-activity">📅 Activity Log</div>
+      </div>
+
+      <!-- ===== TAB: OVERVIEW ===== -->
+      <div class="profile-panel active" id="ppanel-overview">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+
+          <!-- LEFT COLUMN -->
+          <div>
+            <!-- Personal Info -->
+            <div class="info-section">
+              <div class="info-section-header">
+                <span class="info-section-title">👤 Personal Information</span>
+                <button class="btn btn-ghost btn-sm" onclick="switchProfileTab('edit')">✏️ Edit</button>
+              </div>
+              <div class="info-grid">
+                <div class="info-field">
+                  <div class="info-label">Full Name</div>
+                  <div class="info-value">Sangeetha Devi</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Employee ID</div>
+                  <div class="info-value">EMP-2026-001</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Email Address</div>
+                  <div class="info-value">✉️ sangeetha@codeaxis.io</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Phone Number</div>
+                  <div class="info-value">📱 +91 98765 43210</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Department</div>
+                  <div class="info-value">🎨 Design</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Role</div>
+                  <div class="info-value"><span class="info-badge-role">🎨 UI/UX Designer</span></div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Date of Joining</div>
+                  <div class="info-value">📅 May 21, 2025</div>
+                </div>
+                <div class="info-field">
+                  <div class="info-label">Location</div>
+                  <div class="info-value">📍 Hyderabad, Telangana</div>
+                </div>
+                <div class="info-field" style="grid-column:1/-1;">
+                  <div class="info-label">Bio</div>
+                  <div class="info-value" style="display:block;line-height:1.6;color:var(--text-secondary);">
+                    Passionate UI/UX designer with a focus on creating clean, user-friendly SaaS interfaces. Specialized in design systems, component libraries, and data visualization dashboards.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="info-section">
+              <div class="info-section-header">
+                <span class="info-section-title">🛠️ Skills & Expertise</span>
+                <button class="btn btn-ghost btn-sm">+ Add Skill</button>
+              </div>
+              <div class="skill-tags">
+                <span class="skill-tag primary">Figma</span>
+                <span class="skill-tag primary">HTML5 / CSS3</span>
+                <span class="skill-tag primary">JavaScript</span>
+                <span class="skill-tag primary">Design Systems</span>
+                <span class="skill-tag">Bootstrap 5</span>
+                <span class="skill-tag">React JS</span>
+                <span class="skill-tag">Chart.js</span>
+                <span class="skill-tag">UI/UX Research</span>
+                <span class="skill-tag">Wireframing</span>
+                <span class="skill-tag">Prototyping</span>
+                <span class="skill-tag">Adobe XD</span>
+                <span class="skill-tag">Responsive Design</span>
+              </div>
+            </div>
+
+            <!-- Performance -->
+            <div class="info-section">
+              <div class="info-section-header">
+                <span class="info-section-title">📊 Performance Overview</span>
+                <span class="badge badge-success">Excellent</span>
+              </div>
+              <div class="perf-item">
+                <div class="perf-label"><span>Task Completion Rate</span><span style="color:var(--success);font-weight:600;">94%</span></div>
+                <div class="progress-bar"><div class="progress-fill success" style="width:94%"></div></div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-label"><span>Attendance Rate</span><span style="color:var(--success);font-weight:600;">96%</span></div>
+                <div class="progress-bar"><div class="progress-fill success" style="width:96%"></div></div>
+              </div>
+              <div class="perf-item">
+                <div class="perf-label"><span>Code / Design Quality</span><span style="color:var(--primary);font-weight:600;">92%</span></div>
+                <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+              </div>
+              <div class="perf-item" style="margin-bottom:0;">
+                <div class="perf-label"><span>Team Collaboration</span><span style="color:var(--primary);font-weight:600;">98%</span></div>
+                <div class="progress-bar"><div class="progress-fill" style="width:98%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div>
+            <!-- Quick Info -->
+            <div class="info-section" style="margin-bottom:16px;">
+              <div class="info-section-title" style="margin-bottom:16px;">ℹ️ Quick Details</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+                  <span style="color:var(--text-muted);">Status</span>
+                  <span class="badge badge-success">● Active</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+                  <span style="color:var(--text-muted);">Access Level</span>
+                  <span class="badge badge-primary">Admin</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+                  <span style="color:var(--text-muted);">2FA</span>
+                  <span class="badge badge-success">Enabled</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+                  <span style="color:var(--text-muted);">Last Login</span>
+                  <span style="color:var(--text-primary);font-weight:500;">Today, 9:15 AM</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+                  <span style="color:var(--text-muted);">Experience</span>
+                  <span style="color:var(--text-primary);font-weight:500;">1 Year</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
+                  <span style="color:var(--text-muted);">Timezone</span>
+                  <span style="color:var(--text-primary);font-weight:500;">IST (UTC+5:30)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Projects -->
+            <div class="info-section" style="margin-bottom:16px;">
+              <div class="info-section-title" style="margin-bottom:16px;">📁 Current Projects</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <span style="font-size:0.85rem;font-weight:600;">CodeAxis Frontend</span>
+                    <span class="badge badge-primary">Active</span>
+                  </div>
+                  <div class="progress-bar" style="height:6px;"><div class="progress-fill" style="width:72%"></div></div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">72% complete</div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <span style="font-size:0.85rem;font-weight:600;">Design System v2</span>
+                    <span class="badge badge-success">Done</span>
+                  </div>
+                  <div class="progress-bar" style="height:6px;"><div class="progress-fill success" style="width:100%"></div></div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">100% complete</div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <span style="font-size:0.85rem;font-weight:600;">Mobile App UI</span>
+                    <span class="badge badge-warning">In Review</span>
+                  </div>
+                  <div class="progress-bar" style="height:6px;"><div class="progress-fill warning" style="width:50%"></div></div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">50% complete</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Card -->
+            <div class="info-section">
+              <div class="info-section-title" style="margin-bottom:16px;">📬 Contact</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="showToast('Message feature coming soon!','info')">💬 Send Message</button>
+                <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="showToast('Email feature coming soon!','info')">✉️ Send Email</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /overview -->
+
+      <!-- ===== TAB: EDIT PROFILE ===== -->
+      <div class="profile-panel" id="ppanel-edit">
+        <div id="editAlert" style="display:none;margin-bottom:16px;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+          <div class="info-section">
+            <div class="info-section-header"><span class="info-section-title">👤 Basic Information</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px;">
+              <div class="form-group">
+                <label class="form-label">First Name <span class="required">*</span></label>
+                <input type="text" class="form-control" value="Sangeetha" id="editFirst" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Name <span class="required">*</span></label>
+                <input type="text" class="form-control" value="Devi" id="editLast" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address <span class="required">*</span></label>
+              <div class="input-group"><span class="input-icon">✉️</span>
+                <input type="email" class="form-control" value="sangeetha@codeaxis.io" id="editEmail" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <div class="input-group"><span class="input-icon">📱</span>
+                <input type="tel" class="form-control" value="+91 98765 43210" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <div class="input-group"><span class="input-icon">📍</span>
+                <input type="text" class="form-control" value="Hyderabad, Telangana" />
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Bio</label>
+              <textarea class="form-control" rows="3" style="resize:vertical;">Passionate UI/UX designer with a focus on creating clean, user-friendly SaaS interfaces.</textarea>
+            </div>
+          </div>
+
+          <div>
+            <div class="info-section" style="margin-bottom:20px;">
+              <div class="info-section-header"><span class="info-section-title">🏢 Work Information</span></div>
+              <div class="form-group">
+                <label class="form-label">Job Title</label>
+                <input type="text" class="form-control" value="UI/UX Designer" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-control">
+                  <option selected>Design</option>
+                  <option>Engineering</option>
+                  <option>HR</option>
+                  <option>Management</option>
+                  <option>QA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Timezone</label>
+                <select class="form-control">
+                  <option selected>Asia/Kolkata (IST +5:30)</option>
+                  <option>UTC+0</option>
+                  <option>America/New_York (EST)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">LinkedIn Profile</label>
+                <div class="input-group"><span class="input-icon">🔗</span>
+                  <input type="url" class="form-control" placeholder="https://linkedin.com/in/..." />
+                </div>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <div class="info-section-header"><span class="info-section-title">🖼️ Profile Photo</span></div>
+              <div style="display:flex;align-items:center;gap:20px;">
+                <div class="profile-avatar-main" style="width:72px;height:72px;font-size:1.4rem;flex-shrink:0;">SG</div>
+                <div>
+                  <button class="btn btn-outline btn-sm" style="margin-bottom:8px;display:block;" onclick="showToast('Upload feature coming soon!','info')">📷 Upload Photo</button>
+                  <div style="font-size:0.78rem;color:var(--text-muted);">JPG, PNG up to 2MB.<br/>Recommended: 200×200px.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+          <button class="btn btn-ghost" onclick="switchProfileTab('overview')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveProfile()">💾 Save Changes</button>
+        </div>
+      </div><!-- /edit -->
+
+      <!-- ===== TAB: SECURITY ===== -->
+      <div class="profile-panel" id="ppanel-security">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+          <!-- Change Password -->
+          <div class="info-section">
+            <div class="info-section-header"><span class="info-section-title">🔑 Change Password</span></div>
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <div class="input-group"><span class="input-icon">🔒</span>
+                <input type="password" class="form-control" id="curPwd" placeholder="Enter current password" />
+                <button class="input-action" onclick="togglePwd('curPwd',this)" type="button">👁️</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <div class="input-group"><span class="input-icon">🔒</span>
+                <input type="password" class="form-control" id="newPwd" placeholder="Min 8 characters" oninput="checkStr(this.value)" />
+                <button class="input-action" onclick="togglePwd('newPwd',this)" type="button">👁️</button>
+              </div>
+              <div style="display:flex;gap:4px;margin-top:6px;">
+                <div style="height:4px;flex:1;border-radius:2px;background:var(--border);transition:background 0.3s;" id="ps1"></div>
+                <div style="height:4px;flex:1;border-radius:2px;background:var(--border);transition:background 0.3s;" id="ps2"></div>
+                <div style="height:4px;flex:1;border-radius:2px;background:var(--border);transition:background 0.3s;" id="ps3"></div>
+                <div style="height:4px;flex:1;border-radius:2px;background:var(--border);transition:background 0.3s;" id="ps4"></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label class="form-label">Confirm New Password</label>
+              <div class="input-group"><span class="input-icon">🔒</span>
+                <input type="password" class="form-control" id="cnfPwd" placeholder="Repeat new password" />
+                <button class="input-action" onclick="togglePwd('cnfPwd',this)" type="button">👁️</button>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="changePassword()">🔑 Update Password</button>
+          </div>
+
+          <!-- Security Settings -->
+          <div>
+            <div class="info-section" style="margin-bottom:16px;">
+              <div class="info-section-header"><span class="info-section-title">🛡️ Two-Factor Authentication</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <div>
+                  <div style="font-size:0.875rem;font-weight:600;margin-bottom:3px;">Authenticator App (TOTP)</div>
+                  <div style="font-size:0.78rem;color:var(--text-secondary);">Use Google Authenticator or Authy</div>
+                </div>
+                <span class="badge badge-success">✅ Enabled</span>
+              </div>
+              <div style="display:flex;gap:10px;">
+                <button class="btn btn-outline btn-sm" onclick="showToast('2FA management coming soon!','info')">⚙️ Manage 2FA</button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="showToast('Are you sure? 2FA disable requires verification.','info')">Disable</button>
+              </div>
+            </div>
+
+            <div class="info-section" style="margin-bottom:16px;">
+              <div class="info-section-header"><span class="info-section-title">🖥️ Active Sessions</span></div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--primary-bg);border-radius:var(--radius-md);">
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:600;">Chrome on Windows</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary);">Hyderabad, IN · This device</div>
+                  </div>
+                  <span class="badge badge-success">● Active</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:var(--radius-md);">
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:600;">Safari on iPhone</div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary);">Hyderabad, IN · 3 hours ago</div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--danger);font-size:0.75rem;" onclick="showToast('Session revoked','info')">Revoke</button>
+                </div>
+              </div>
+              <button class="btn btn-danger btn-sm" style="width:100%;justify-content:center;margin-top:14px;" onclick="showToast('All other sessions revoked!','info')">🚪 Sign Out All Devices</button>
+            </div>
+
+            <div class="info-section">
+              <div class="info-section-header"><span class="info-section-title">⚠️ Danger Zone</span></div>
+              <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="showToast('Please contact admin to delete your account.','info')">🗑️ Delete Account</button>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /security -->
+
+      <!-- ===== TAB: ACTIVITY LOG ===== -->
+      <div class="profile-panel" id="ppanel-activity">
+        <div class="info-section">
+          <div class="info-section-header">
+            <span class="info-section-title">📅 Recent Activity</span>
+            <button class="btn btn-ghost btn-sm">📥 Export Log</button>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-icon primary" style="background:var(--primary-bg);">📝</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Completed task <strong>"Login Page UI"</strong> and updated status to Done</div>
+                <div class="timeline-time">Today, 9:42 AM</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--success-light);">✅</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Marked attendance for today — <strong>Check In: 9:00 AM</strong></div>
+                <div class="timeline-time">Today, 9:00 AM</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--info-light);">🔒</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Logged in from <strong>Chrome on Windows</strong> — Hyderabad, IN</div>
+                <div class="timeline-time">Today, 8:58 AM</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--warning-light);">📊</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Viewed <strong>Monthly Performance Report</strong> for April 2026</div>
+                <div class="timeline-time">Yesterday, 4:12 PM</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--primary-bg);">💬</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Added a comment on task <strong>"Dashboard Redesign"</strong>: "Please add responsive breakpoints"</div>
+                <div class="timeline-time">Yesterday, 2:30 PM</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--success-light);">📁</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Created new project <strong>"Mobile App UI"</strong> with 3 milestones</div>
+                <div class="timeline-time">May 19, 2026</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--info-light);">⚙️</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Updated profile settings — changed timezone to IST</div>
+                <div class="timeline-time">May 18, 2026</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--danger-light);">🔑</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Password changed successfully from account settings</div>
+                <div class="timeline-time">May 17, 2026</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-icon" style="background:var(--primary-bg);">👥</div>
+              <div class="timeline-body">
+                <div class="timeline-text">Approved employee registration for <strong>Meena Sharma</strong></div>
+                <div class="timeline-time">May 16, 2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /activity -->
+
+    </div><!-- /content-area -->
+  </div><!-- /main-content -->
+</div><!-- /app-wrapper -->
+
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;"></div>
+
+<script src="main.js"></script>
+<script>
+  function switchProfileTab(name) {
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+    const tabEl = document.getElementById('ptab-' + name);
+    const panelEl = document.getElementById('ppanel-' + name);
+    if (tabEl) tabEl.classList.add('active');
+    if (panelEl) panelEl.classList.add('active');
+  }
+
+  function togglePwd(id, btn) {
+    const f = document.getElementById(id);
+    f.type = f.type === 'text' ? 'password' : 'text';
+    btn.textContent = f.type === 'text' ? '🙈' : '👁️';
+  }
+
+  function checkStr(val) {
+    let s = 0;
+    if (val.length >= 8) s++;
+    if (/[A-Z]/.test(val)) s++;
+    if (/[0-9]/.test(val)) s++;
+    if (/[^A-Za-z0-9]/.test(val)) s++;
+    const c = ['','#EF4444','#F59E0B','#3B82F6','#22C55E'];
+    for (let i = 1; i <= 4; i++) document.getElementById('ps'+i).style.background = i <= s ? c[s] : 'var(--border)';
+  }
+
+  function changePassword() {
+    const cur = document.getElementById('curPwd').value;
+    const np  = document.getElementById('newPwd').value;
+    const cnf = document.getElementById('cnfPwd').value;
+    if (!cur) { showToast('Please enter your current password','info'); return; }
+    if (!np || np.length < 8) { showToast('New password must be at least 8 characters','info'); return; }
+    if (np !== cnf) { showToast('Passwords do not match ❌','info'); return; }
+    showToast('Password updated successfully! 🔑','success');
+    document.getElementById('curPwd').value = '';
+    document.getElementById('newPwd').value = '';
+    document.getElementById('cnfPwd').value = '';
+    for (let i = 1; i <= 4; i++) document.getElementById('ps'+i).style.background = 'var(--border)';
+  }
+
+  function saveProfile() {
+    const first = document.getElementById('editFirst').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    if (!first) { showToast('First name is required ⚠️','info'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Valid email required ⚠️','info'); return; }
+    showToast('Profile updated successfully! ✅','success');
+    switchProfileTab('overview');
+  }
+
+  function showToast(msg, type = 'success') {
+    const colors = { success: '#22C55E', info: '#3B82F6', danger: '#EF4444' };
+    const toast = document.createElement('div');
+    toast.style.cssText = `background:${colors[type]||colors.success};color:white;padding:12px 20px;
+      border-radius:10px;font-size:0.875rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);
+      animation:slideInT 0.3s ease;display:flex;align-items:center;gap:8px;max-width:320px;`;
+    toast.textContent = msg;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3500);
+  }
+
+  const sty = document.createElement('style');
+  sty.textContent = '@keyframes slideInT { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }';
+  document.head.appendChild(sty);
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    .settings-nav { display:flex; flex-direction:column; gap:2px; }
+    .settings-nav-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--radius-md); cursor:pointer; font-size:0.875rem; font-weight:500; color:var(--text-secondary); transition:var(--transition); }
+    .settings-nav-item:hover { background:var(--primary-bg); color:var(--primary); }
+    .settings-nav-item.active { background:var(--primary-bg); color:var(--primary); font-weight:600; }
+    .settings-panel { display:none; }
+    .settings-panel.active { display:block; }
+    .settings-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; margin-bottom:20px; }
+    .settings-section-title { font-family:var(--font-primary); font-size:1rem; font-weight:700; margin-bottom:4px; }
+    .settings-section-desc { font-size:0.85rem; color:var(--text-secondary); margin-bottom:22px; }
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }
+    .avatar-upload { width:80px; height:80px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.8rem; font-weight:700; color:white; font-family:var(--font-primary); position:relative; cursor:pointer; flex-shrink:0; }
+    .avatar-upload-overlay { position:absolute; inset:0; border-radius:50%; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; opacity:0; transition:var(--transition); font-size:1rem; }
+    .avatar-upload:hover .avatar-upload-overlay { opacity:1; }
+    .toggle-switch { position:relative; width:44px; height:24px; flex-shrink:0; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:var(--border); border-radius:var(--radius-full); cursor:pointer; transition:var(--transition); }
+    .toggle-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:var(--transition); }
+    .toggle-switch input:checked + .toggle-slider { background:var(--primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
+    .notif-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); }
+    .notif-row:last-child { border-bottom:none; }
+    .danger-zone { background:var(--danger-light); border:1px solid #FECACA; border-radius:var(--radius-lg); padding:24px; }
+    .danger-action { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #FECACA; flex-wrap:wrap; gap:10px; }
+    .danger-action:last-child { border-bottom:none; padding-bottom:0; }
+    .theme-grid { display:flex; gap:12px; flex-wrap:wrap; }
+    .theme-option { border:2px solid var(--border); border-radius:var(--radius-md); padding:14px 20px; cursor:pointer; transition:var(--transition); text-align:center; font-size:0.85rem; font-weight:500; }
+    .theme-option.selected { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+    @media(max-width:768px){ .form-grid-2{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content" id="mainContent">
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Settings</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Settings</span></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">🔔<span class="notification-dot"></span></button>
+        <div class="user-avatar" id="userAvatarBtn">SR</div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="dropdown-item">👤 Profile</div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel"></div>
+      </div>
+    </nav>
+
+    <div class="content-area">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Settings</div>
+          <div class="page-subtitle">Manage your account, preferences, and security</div>
+        </div>
+      </div>
+
+      <!-- Settings Layout -->
+      <div style="display:flex;gap:24px;align-items:flex-start;">
+
+        <!-- Left Settings Nav -->
+        <div style="width:220px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;">
+          <div class="settings-nav">
+            <div class="settings-nav-item active" onclick="showPanel('profile')">👤 Profile</div>
+            <div class="settings-nav-item" onclick="showPanel('account')">🔒 Account & Password</div>
+            <div class="settings-nav-item" onclick="showPanel('notif')">🔔 Notifications</div>
+            <div class="settings-nav-item" onclick="showPanel('appearance')">🎨 Appearance</div>
+            <div class="settings-nav-item" onclick="showPanel('privacy')">🛡️ Privacy & Security</div>
+            <div class="settings-nav-item" onclick="showPanel('danger')" style="color:var(--danger);margin-top:12px;">⚠️ Danger Zone</div>
+          </div>
+        </div>
+
+        <!-- Right Content -->
+        <div style="flex:1;min-width:0;">
+
+          <!-- PROFILE PANEL -->
+          <div id="panel-profile" class="settings-panel active">
+            <div class="settings-section">
+              <div class="settings-section-title">Profile Information</div>
+              <div class="settings-section-desc">Update your personal details and public profile.</div>
+              <div id="profileAlert" style="display:none;margin-bottom:16px;"></div>
+              <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;">
+                <div class="avatar-upload" id="avatarEl">SR<div class="avatar-upload-overlay">📷</div></div>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Saireddy Raghuram</div>
+                  <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">sai@codeaxis.io · Frontend Developer</div>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById('avatarInput').click()">Change Photo</button>
+                  <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="previewAvatar(this)" />
+                </div>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">First Name</label><input type="text" class="form-control" id="pfFirstName" value="Saireddy" /></div>
+                <div class="form-group"><label class="form-label">Last Name</label><input type="text" class="form-control" id="pfLastName" value="Raghuram" /></div>
+              </div>
+              <div class="form-group"><label class="form-label">Work Email</label><div class="input-group"><span class="input-icon">✉️</span><input type="email" class="form-control" id="pfEmail" value="sai@codeaxis.io" /></div></div>
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">Phone</label><div class="input-group"><span class="input-icon">📱</span><input type="tel" class="form-control" id="pfPhone" value="+91 9988776655" /></div></div>
+                <div class="form-group"><label class="form-label">Department</label><select class="form-control" id="pfDept"><option>Frontend</option><option>Engineering</option><option>Design</option><option>Backend</option><option>QA</option><option>HR</option><option>Management</option></select></div>
+              </div>
+              <div class="form-group"><label class="form-label">Bio</label><textarea class="form-control" rows="3" id="pfBio" style="resize:none;" placeholder="Tell us a bit about yourself...">Frontend developer specializing in responsive UI and component libraries at Fusion5 Technologies.</textarea></div>
+              <button class="btn btn-primary" onclick="saveProfile()">💾 Save Changes</button>
+            </div>
+          </div>
+
+          <!-- ACCOUNT & PASSWORD PANEL -->
+          <div id="panel-account" class="settings-panel">
+            <div class="settings-section">
+              <div class="settings-section-title">Change Password</div>
+              <div class="settings-section-desc">Ensure your account is using a strong, unique password.</div>
+              <div id="pwdAlert" style="display:none;margin-bottom:16px;"></div>
+              <div class="form-group"><label class="form-label">Current Password <span class="required">*</span></label><div class="input-group"><span class="input-icon">🔒</span><input type="password" class="form-control" id="curPwd" placeholder="Enter current password" /><button class="input-action" onclick="togglePwd('curPwd',this)" type="button">👁️</button></div></div>
+              <div class="form-group"><label class="form-label">New Password <span class="required">*</span></label><div class="input-group"><span class="input-icon">🔒</span><input type="password" class="form-control" id="newPwd" placeholder="Min 8 characters" oninput="checkStr(this.value)" /><button class="input-action" onclick="togglePwd('newPwd',this)" type="button">👁️</button></div>
+              <div style="display:flex;gap:4px;margin-top:6px;"><div style="height:4px;flex:1;border-radius:2px;transition:0.3s;" id="ps1"></div><div style="height:4px;flex:1;border-radius:2px;transition:0.3s;" id="ps2"></div><div style="height:4px;flex:1;border-radius:2px;transition:0.3s;" id="ps3"></div><div style="height:4px;flex:1;border-radius:2px;transition:0.3s;" id="ps4"></div></div></div>
+              <div class="form-group"><label class="form-label">Confirm New Password <span class="required">*</span></label><div class="input-group"><span class="input-icon">🔒</span><input type="password" class="form-control" id="confPwd" placeholder="Repeat new password" /></div></div>
+              <button class="btn btn-primary" onclick="changePassword()">🔒 Update Password</button>
+            </div>
+            <div class="settings-section">
+              <div class="settings-section-title">Two-Factor Authentication</div>
+              <div class="settings-section-desc">Add an extra layer of security to your account.</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div><div style="font-weight:600;font-size:0.875rem;">Authenticator App</div><div style="font-size:0.82rem;color:var(--text-muted);">Use Google Authenticator or Authy</div></div>
+                <label class="toggle-switch"><input type="checkbox" id="twoFAToggle" /><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS PANEL -->
+          <div id="panel-notif" class="settings-panel">
+            <div class="settings-section">
+              <div class="settings-section-title">Notification Preferences</div>
+              <div class="settings-section-desc">Choose what you want to be notified about.</div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Task Assignments</div><div style="font-size:0.8rem;color:var(--text-muted);">When a task is assigned to you</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Deadline Reminders</div><div style="font-size:0.8rem;color:var(--text-muted);">24 hours before a task deadline</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Project Updates</div><div style="font-size:0.8rem;color:var(--text-muted);">When project status changes</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Leave Approvals</div><div style="font-size:0.8rem;color:var(--text-muted);">When your leave is approved or rejected</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Email Notifications</div><div style="font-size:0.8rem;color:var(--text-muted);">Receive email digests daily</div></div>
+                <label class="toggle-switch"><input type="checkbox" /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Browser Push Notifications</div><div style="font-size:0.8rem;color:var(--text-muted);">Allow push notifications in browser</div></div>
+                <label class="toggle-switch"><input type="checkbox" /><span class="toggle-slider"></span></label>
+              </div>
+              <button class="btn btn-primary" style="margin-top:12px;" onclick="CodeAxis.toast('Notification preferences saved!','success')">💾 Save Preferences</button>
+            </div>
+          </div>
+
+          <!-- APPEARANCE PANEL -->
+          <div id="panel-appearance" class="settings-panel">
+            <div class="settings-section">
+              <div class="settings-section-title">Theme</div>
+              <div class="settings-section-desc">Choose your preferred interface theme.</div>
+              <div class="theme-grid">
+                <div class="theme-option selected" id="themeLight" onclick="setTheme('light')">☀️<br/>Light</div>
+                <div class="theme-option" id="themeDark" onclick="setTheme('dark')">🌙<br/>Dark</div>
+                <div class="theme-option" id="themeSystem" onclick="setTheme('system')">💻<br/>System</div>
+              </div>
+            </div>
+            <div class="settings-section">
+              <div class="settings-section-title">Sidebar</div>
+              <div class="settings-section-desc">Customize sidebar behavior.</div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Auto-collapse on mobile</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Show badge counts</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <div class="settings-section-title">Language & Region</div>
+              <div class="settings-section-desc">Set your locale and date preferences.</div>
+              <div class="form-grid-2">
+                <div class="form-group"><label class="form-label">Language</label><select class="form-control"><option>English (US)</option><option>English (IN)</option><option>Telugu</option><option>Hindi</option></select></div>
+                <div class="form-group"><label class="form-label">Timezone</label><select class="form-control"><option>Asia/Kolkata (IST)</option><option>UTC</option><option>America/New_York</option></select></div>
+              </div>
+              <div class="form-group"><label class="form-label">Date Format</label><select class="form-control" style="width:auto;"><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+              <button class="btn btn-primary" onclick="CodeAxis.toast('Appearance settings saved!','success')">💾 Save</button>
+            </div>
+          </div>
+
+          <!-- PRIVACY PANEL -->
+          <div id="panel-privacy" class="settings-panel">
+            <div class="settings-section">
+              <div class="settings-section-title">Privacy & Security</div>
+              <div class="settings-section-desc">Manage your data and session security.</div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Profile Visibility</div><div style="font-size:0.8rem;color:var(--text-muted);">Allow other team members to see your profile</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Activity Status</div><div style="font-size:0.8rem;color:var(--text-muted);">Show when you were last active</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+              <div class="notif-row">
+                <div><div style="font-weight:600;font-size:0.875rem;">Login Alerts</div><div style="font-size:0.8rem;color:var(--text-muted);">Email me when a new login occurs</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <div class="settings-section-title">Active Sessions</div>
+              <div class="settings-section-desc">Manage devices currently signed in.</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--primary-bg);border-radius:var(--radius-md);border:1px solid rgba(79,70,229,0.2);">
+                  <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:1.4rem;">💻</span><div><div style="font-weight:600;font-size:0.85rem;">Chrome · Windows 11</div><div style="font-size:0.75rem;color:var(--text-muted);">Hyderabad, IN · Current Session</div></div></div>
+                  <span class="badge badge-success">Active</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg);border-radius:var(--radius-md);border:1px solid var(--border);">
+                  <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:1.4rem;">📱</span><div><div style="font-weight:600;font-size:0.85rem;">Safari · iPhone 15</div><div style="font-size:0.75rem;color:var(--text-muted);">Hyderabad, IN · 2 days ago</div></div></div>
+                  <button class="btn btn-ghost btn-sm" style="color:var(--danger);">Revoke</button>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" style="margin-top:14px;color:var(--danger);border-color:var(--danger);" onclick="CodeAxis.toast('All other sessions revoked.','warning')">🚪 Revoke All Other Sessions</button>
+            </div>
+          </div>
+
+          <!-- DANGER ZONE PANEL -->
+          <div id="panel-danger" class="settings-panel">
+            <div class="danger-zone">
+              <div style="font-family:var(--font-primary);font-weight:700;font-size:1rem;color:var(--danger);margin-bottom:4px;">⚠️ Danger Zone</div>
+              <div style="font-size:0.85rem;color:#991B1B;margin-bottom:18px;">These actions are permanent and cannot be undone.</div>
+              <div class="danger-action">
+                <div><div style="font-weight:600;font-size:0.875rem;color:var(--text-primary);">Export Account Data</div><div style="font-size:0.8rem;color:var(--text-secondary);">Download all your data in JSON format</div></div>
+                <button class="btn btn-outline btn-sm" onclick="CodeAxis.toast('Data export requested. You will receive an email shortly.','info')">📥 Export Data</button>
+              </div>
+              <div class="danger-action">
+                <div><div style="font-weight:600;font-size:0.875rem;color:var(--text-primary);">Deactivate Account</div><div style="font-size:0.8rem;color:var(--text-secondary);">Temporarily disable your account access</div></div>
+                <button class="btn btn-outline btn-sm" style="color:var(--warning);border-color:var(--warning);" onclick="openModal('deactivateModal')">⏸ Deactivate</button>
+              </div>
+              <div class="danger-action">
+                <div><div style="font-weight:600;font-size:0.875rem;color:var(--danger);">Delete Account</div><div style="font-size:0.8rem;color:#991B1B;">Permanently delete your account and all data</div></div>
+                <button class="btn btn-sm" style="background:var(--danger);color:white;border:none;padding:8px 16px;border-radius:var(--radius-md);cursor:pointer;font-weight:600;" onclick="openModal('deleteAccModal')">🗑️ Delete Account</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Deactivate Modal -->
+<div class="modal-overlay" id="deactivateModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header"><span class="modal-title">⏸ Deactivate Account</span><button class="modal-close" onclick="closeModal('deactivateModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="alert alert-warning"><span class="alert-icon">⚠️</span><div>Your account will be temporarily disabled. You can reactivate by contacting your admin.</div></div>
+      <div class="form-group"><label class="form-label">Reason for deactivation</label><textarea class="form-control" rows="2" placeholder="Optional…" style="resize:none;"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('deactivateModal')">Cancel</button>
+      <button class="btn btn-sm" style="background:var(--warning);color:white;border:none;padding:10px 18px;border-radius:var(--radius-md);cursor:pointer;font-weight:600;" onclick="closeModal('deactivateModal');CodeAxis.toast('Account deactivation request submitted.','warning')">Deactivate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal-overlay" id="deleteAccModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header"><span class="modal-title" style="color:var(--danger);">🗑️ Delete Account</span><button class="modal-close" onclick="closeModal('deleteAccModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="alert alert-danger"><span class="alert-icon">❌</span><div>This will permanently delete your account and all associated data. This cannot be undone.</div></div>
+      <div class="form-group"><label class="form-label">Type <strong>DELETE</strong> to confirm</label><input type="text" class="form-control" id="deleteConfirmInput" placeholder="Type DELETE" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('deleteAccModal')">Cancel</button>
+      <button class="btn btn-sm" style="background:var(--danger);color:white;border:none;padding:10px 18px;border-radius:var(--radius-md);cursor:pointer;font-weight:600;" onclick="confirmDeleteAccount()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script>
+  function showPanel(name) {
+    document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  function saveProfile() {
+    const al = document.getElementById('profileAlert');
+    al.style.display='block'; al.className='alert alert-success';
+    al.innerHTML='<span class="alert-icon">✅</span><div>Profile updated successfully!</div>';
+    setTimeout(() => al.style.display='none', 4000);
+  }
+
+  function togglePwd(id, btn) {
+    const f = document.getElementById(id);
+    f.type = f.type==='text'?'password':'text';
+    btn.textContent = f.type==='text'?'🙈':'👁️';
+  }
+
+  function checkStr(val) {
+    let sc = 0;
+    if (val.length>=8) sc++;
+    if (/[A-Z]/.test(val)) sc++;
+    if (/[0-9]/.test(val)) sc++;
+    if (/[^A-Za-z0-9]/.test(val)) sc++;
+    const colors = ['','#EF4444','#F59E0B','#3B82F6','#22C55E'];
+    for (let i=1;i<=4;i++) {
+      const el = document.getElementById('ps'+i);
+      el.style.background = i<=sc ? colors[sc] : 'var(--border)';
+    }
+  }
+
+  function changePassword() {
+    const cur = document.getElementById('curPwd').value;
+    const np = document.getElementById('newPwd').value;
+    const cp = document.getElementById('confPwd').value;
+    const al = document.getElementById('pwdAlert');
+    if (!cur||!np||!cp) { al.style.display='block'; al.className='alert alert-danger'; al.innerHTML='<span class="alert-icon">❌</span><div>All password fields are required.</div>'; return; }
+    if (np!==cp) { al.style.display='block'; al.className='alert alert-danger'; al.innerHTML='<span class="alert-icon">❌</span><div>New passwords do not match.</div>'; return; }
+    al.style.display='block'; al.className='alert alert-success'; al.innerHTML='<span class="alert-icon">✅</span><div>Password changed successfully!</div>';
+    setTimeout(()=>al.style.display='none',4000);
+  }
+
+  function setTheme(t) {
+    ['light','dark','system'].forEach(th => document.getElementById('theme'+th.charAt(0).toUpperCase()+th.slice(1)).classList.remove('selected'));
+    document.getElementById('theme'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('selected');
+    if (t==='dark') document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+    localStorage.setItem('ca-theme', t);
+    CodeAxis.toast('Theme updated!','success');
+  }
+
+  function previewAvatar(input) {
+    if (!input.files||!input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const av = document.getElementById('avatarEl');
+      av.style.backgroundImage = `url(${e.target.result})`;
+      av.style.backgroundSize = 'cover';
+      av.textContent = '';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function confirmDeleteAccount() {
+    if (document.getElementById('deleteConfirmInput').value !== 'DELETE') {
+      CodeAxis.toast('Please type DELETE to confirm.','danger'); return;
+    }
+    closeModal('deleteAccModal');
+    CodeAxis.toast('Account deletion request submitted.','danger');
+  }
+</script>
+</body>
+</html>

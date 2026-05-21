@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Projects – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    .proj-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px; display:flex; flex-direction:column; gap:14px; transition:var(--transition); cursor:pointer; }
+    .proj-card:hover { box-shadow:var(--shadow-md); border-color:var(--primary); transform:translateY(-2px); }
+    .proj-header { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .proj-icon { width:44px; height:44px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+    .proj-title { font-family:var(--font-primary); font-weight:700; font-size:0.95rem; color:var(--text-primary); margin-bottom:3px; }
+    .proj-desc { font-size:0.8rem; color:var(--text-secondary); line-height:1.5; }
+    .proj-meta { display:flex; gap:14px; flex-wrap:wrap; }
+    .proj-meta-item { font-size:0.78rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+    .proj-members { display:flex; }
+    .member-av { width:28px; height:28px; border-radius:50%; border:2px solid var(--surface); display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; color:white; margin-left:-8px; }
+    .member-av:first-child { margin-left:0; }
+    .proj-progress-label { display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:5px; }
+    .view-toggle { display:flex; border:1.5px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
+    .view-btn { padding:7px 14px; background:none; border:none; cursor:pointer; font-size:0.85rem; transition:var(--transition-fast); color:var(--text-secondary); }
+    .view-btn.active { background:var(--primary); color:white; }
+    /* Detail Panel */
+    .detail-panel { position:fixed; right:0; top:0; bottom:0; width:420px; background:var(--surface); border-left:1px solid var(--border); z-index:500; transform:translateX(100%); transition:var(--transition); overflow-y:auto; box-shadow:var(--shadow-lg); }
+    .detail-panel.open { transform:translateX(0); }
+    .detail-header { padding:22px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .detail-body { padding:24px; }
+    .detail-section { margin-bottom:24px; }
+    .detail-section-title { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px; }
+    .team-list { display:flex; flex-direction:column; gap:10px; }
+    .team-member { display:flex; align-items:center; gap:12px; }
+    .task-mini { display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--bg); border-radius:var(--radius-md); font-size:0.83rem; }
+    .task-mini-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
+    @media(max-width:600px){ .form-grid-2{grid-template-columns:1fr;} .detail-panel{width:100%;} }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item active"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content" id="mainContent">
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Projects</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Projects</span></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">🔔<span class="notification-dot"></span></button>
+        <div class="user-avatar" id="userAvatarBtn">SR</div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="dropdown-item">👤 Profile</div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel"></div>
+      </div>
+    </nav>
+
+    <div class="content-area">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Projects</div>
+          <div class="page-subtitle">Track all active and completed projects</div>
+        </div>
+        <div class="page-header-right">
+          <div class="view-toggle">
+            <button class="view-btn active" id="cardViewBtn" onclick="setView('card')">⊞ Cards</button>
+            <button class="view-btn" id="listViewBtn" onclick="setView('list')">☰ List</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addProjModal')">➕ New Project</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid grid-4 mb-24">
+        <div class="kpi-card"><div class="kpi-icon">📁</div><div class="kpi-info"><div class="kpi-value">12</div><div class="kpi-label">Total Projects</div><div class="kpi-change up">▲ 2 this month</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon success">✅</div><div class="kpi-info"><div class="kpi-value">5</div><div class="kpi-label">Completed</div><div class="kpi-change up">▲ 1 new</div></div></div>
+        <div class="kpi-card warning"><div class="kpi-icon warning">🔄</div><div class="kpi-info"><div class="kpi-value">4</div><div class="kpi-label">In Progress</div><div class="kpi-change">on track</div></div></div>
+        <div class="kpi-card danger"><div class="kpi-icon danger">⏳</div><div class="kpi-info"><div class="kpi-value">3</div><div class="kpi-label">On Hold / New</div><div class="kpi-change down">2 overdue</div></div></div>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:22px;">
+        <div class="search-box" style="flex:1;max-width:260px;">
+          <span>🔍</span><input type="text" id="projSearch" placeholder="Search projects…" oninput="renderProjects()" />
+        </div>
+        <select id="projStatus" class="form-control" style="width:auto;" onchange="renderProjects()">
+          <option value="">All Status</option><option>Active</option><option>Completed</option><option>On Hold</option><option>New</option>
+        </select>
+        <select id="projPriority" class="form-control" style="width:auto;" onchange="renderProjects()">
+          <option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+
+      <!-- Card View -->
+      <div id="cardView" class="grid grid-3" style="gap:20px;" ></div>
+
+      <!-- List View -->
+      <div id="listView" style="display:none;">
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Project</th><th>Lead</th><th>Status</th><th>Priority</th><th>Progress</th><th>Deadline</th><th>Actions</th></tr></thead>
+            <tbody id="projListBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Project Detail Panel -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <div>
+      <div style="font-family:var(--font-primary);font-weight:700;font-size:1.05rem;" id="dpTitle">Project Name</div>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;" id="dpSubtitle">Details</div>
+    </div>
+    <button class="modal-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body">
+    <div class="detail-section">
+      <div class="detail-section-title">Overview</div>
+      <div style="font-size:0.875rem;color:var(--text-secondary);line-height:1.7;" id="dpDesc"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Progress</div>
+      <div class="proj-progress-label"><span id="dpProgressLabel" style="font-size:0.83rem;color:var(--text-secondary);">0%</span></div>
+      <div class="progress-bar" style="height:10px;"><div class="progress-fill" id="dpProgressFill" style="width:0%;"></div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Details</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="dpMeta"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Team</div>
+      <div class="team-list" id="dpTeam"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Recent Tasks</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="dpTasks"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="addProjModal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <span class="modal-title">➕ New Project</span>
+      <button class="modal-close" onclick="closeModal('addProjModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Project Name <span class="required">*</span></label><input type="text" class="form-control" id="npName" placeholder="e.g. HR Portal Redesign" /></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="npDesc" rows="2" placeholder="Brief project description..." style="resize:none;"></textarea></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="npStatus"><option>Active</option><option>New</option><option>On Hold</option></select></div>
+        <div class="form-group"><label class="form-label">Priority</label><select class="form-control" id="npPriority"><option>High</option><option>Medium</option><option>Low</option></select></div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-control" id="npStart" /></div>
+        <div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-control" id="npDeadline" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Lead</label><input type="text" class="form-control" id="npLead" placeholder="e.g. Sangeetha" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addProjModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script>
+  let projects = [
+    { name:'CodeAxis Platform', desc:'Main SaaS platform frontend development covering all modules.', status:'Active', priority:'High', progress:68, lead:'Sangeetha', deadline:'2026-06-30', start:'2026-01-15', team:['SG','PK','SR'], tasks:['Design system complete','Authentication module done','Dashboard in progress'] },
+    { name:'HR Portal Redesign', desc:'Complete overhaul of the HR management portal UI with modern design.', status:'Active', priority:'High', progress:45, lead:'Praveen', deadline:'2026-07-15', start:'2026-02-01', team:['PK','AN'], tasks:['Wireframes approved','Component library 50% done','Testing pending'] },
+    { name:'Employee Self-Service App', desc:'Mobile-friendly app for employees to manage attendance, leaves and payslips.', status:'Active', priority:'Medium', progress:30, lead:'Saireddy', deadline:'2026-08-01', start:'2026-03-01', team:['SR','KR'], tasks:['Requirements gathered','UI mockups in review','Backend API pending'] },
+    { name:'Analytics Dashboard v2', desc:'Advanced analytics and reporting dashboard with Chart.js integration.', status:'Completed', priority:'High', progress:100, lead:'Sangeetha', deadline:'2026-04-30', start:'2025-12-01', team:['SG','DV'], tasks:['All charts implemented','PDF export working','Deployed to production'] },
+    { name:'Attendance Automation', desc:'Biometric-based attendance system integrated with the platform.', status:'On Hold', priority:'Medium', progress:20, lead:'Kiran', deadline:'2026-09-30', start:'2026-04-01', team:['KR','AR'], tasks:['Hardware vendor evaluation','API design pending'] },
+    { name:'Task Management Module', desc:'Kanban-style task management with deadlines and assignments.', status:'Active', priority:'Medium', progress:55, lead:'Saireddy', deadline:'2026-06-15', start:'2026-02-20', team:['SR','PR'], tasks:['Kanban board done','Deadline tracker in progress','Notifications pending'] },
+    { name:'Payroll Module', desc:'Automated payroll computation, payslip generation and disbursement tracking.', status:'New', priority:'High', progress:5, lead:'Meena', deadline:'2026-10-01', start:'2026-05-20', team:['MK'], tasks:['Requirements phase','Vendor evaluation'] },
+    { name:'Mobile App (React Native)', desc:'Cross-platform mobile app for iOS and Android for all platform features.', status:'New', priority:'Low', progress:0, lead:'Rahul', deadline:'2026-12-31', start:'2026-06-01', team:['RM','PK','SR'], tasks:['Tech stack finalized','Kickoff meeting scheduled'] },
+  ];
+
+  const statusColors = { Active:'primary', Completed:'success', 'On Hold':'warning', New:'info' };
+  const priorityColors = { High:'danger', Medium:'warning', Low:'success' };
+  const memberColors = ['#4F46E5','#22C55E','#F59E0B','#EF4444','#3B82F6','#EC4899'];
+
+  function filtered() {
+    const q = document.getElementById('projSearch').value.toLowerCase();
+    const st = document.getElementById('projStatus').value;
+    const pr = document.getElementById('projPriority').value;
+    return projects.filter(p =>
+      p.name.toLowerCase().includes(q) &&
+      (!st || p.status === st) &&
+      (!pr || p.priority === pr)
+    );
+  }
+
+  function renderProjects() {
+    const list = filtered();
+    // Card view
+    document.getElementById('cardView').innerHTML = list.map((p,i) => `
+      <div class="proj-card" onclick="openDetail(${projects.indexOf(p)})">
+        <div class="proj-header">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div class="proj-icon" style="background:var(--primary-bg);">📁</div>
+            <div>
+              <div class="proj-title">${p.name}</div>
+              <div class="proj-desc">${p.desc.substring(0,80)}…</div>
+            </div>
+          </div>
+          <span class="badge badge-${statusColors[p.status]||'neutral'}" style="flex-shrink:0;">${p.status}</span>
+        </div>
+        <div class="proj-progress-label">
+          <span style="font-size:0.78rem;color:var(--text-secondary);">Progress</span>
+          <span style="font-size:0.78rem;font-weight:700;color:var(--primary);">${p.progress}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill ${p.progress===100?'success':''}" data-width="${p.progress}%" style="width:${p.progress}%;"></div></div>
+        <div class="proj-meta">
+          <span class="proj-meta-item">👤 ${p.lead}</span>
+          <span class="proj-meta-item">📅 ${p.deadline}</span>
+          <span class="badge badge-${priorityColors[p.priority]||'neutral'}" style="font-size:0.7rem;">${p.priority}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="proj-members">
+            ${p.team.map((m,mi) => `<div class="member-av" style="background:${memberColors[mi%memberColors.length]};">${m}</div>`).join('')}
+          </div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">${p.team.length} member${p.team.length!==1?'s':''}</span>
+        </div>
+      </div>`).join('');
+
+    // List view
+    document.getElementById('projListBody').innerHTML = list.map((p,i) => `
+      <tr style="cursor:pointer;" onclick="openDetail(${projects.indexOf(p)})">
+        <td><strong>${p.name}</strong></td>
+        <td>${p.lead}</td>
+        <td><span class="badge badge-${statusColors[p.status]||'neutral'}">${p.status}</span></td>
+        <td><span class="badge badge-${priorityColors[p.priority]||'neutral'}">${p.priority}</span></td>
+        <td style="min-width:120px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="progress-bar" style="flex:1;"><div class="progress-fill ${p.progress===100?'success':''}" style="width:${p.progress}%;"></div></div>
+            <span style="font-size:0.78rem;font-weight:600;">${p.progress}%</span>
+          </div>
+        </td>
+        <td style="font-size:0.83rem;color:var(--text-secondary);">${p.deadline}</td>
+        <td><button class="action-btn" onclick="event.stopPropagation();openDetail(${projects.indexOf(p)})">👁️</button></td>
+      </tr>`).join('');
+  }
+
+  function setView(v) {
+    document.getElementById('cardView').style.display = v==='card' ? 'grid' : 'none';
+    document.getElementById('listView').style.display = v==='list' ? 'block' : 'none';
+    document.getElementById('cardViewBtn').classList.toggle('active', v==='card');
+    document.getElementById('listViewBtn').classList.toggle('active', v==='list');
+  }
+
+  function openDetail(i) {
+    const p = projects[i];
+    document.getElementById('dpTitle').textContent = p.name;
+    document.getElementById('dpSubtitle').textContent = `${p.status} · ${p.priority} Priority`;
+    document.getElementById('dpDesc').textContent = p.desc;
+    document.getElementById('dpProgressLabel').textContent = p.progress + '% Complete';
+    document.getElementById('dpProgressFill').style.width = p.progress + '%';
+    document.getElementById('dpProgressFill').className = `progress-fill ${p.progress===100?'success':''}`;
+    document.getElementById('dpMeta').innerHTML = `
+      <div style="background:var(--bg);border-radius:var(--radius-md);padding:10px;"><div style="font-size:0.72rem;color:var(--text-muted);">Lead</div><div style="font-weight:600;font-size:0.85rem;">${p.lead}</div></div>
+      <div style="background:var(--bg);border-radius:var(--radius-md);padding:10px;"><div style="font-size:0.72rem;color:var(--text-muted);">Deadline</div><div style="font-weight:600;font-size:0.85rem;">${p.deadline}</div></div>
+      <div style="background:var(--bg);border-radius:var(--radius-md);padding:10px;"><div style="font-size:0.72rem;color:var(--text-muted);">Start</div><div style="font-weight:600;font-size:0.85rem;">${p.start}</div></div>
+      <div style="background:var(--bg);border-radius:var(--radius-md);padding:10px;"><div style="font-size:0.72rem;color:var(--text-muted);">Members</div><div style="font-weight:600;font-size:0.85rem;">${p.team.length}</div></div>`;
+    const memberColors2 = ['#4F46E5','#22C55E','#F59E0B','#EF4444','#3B82F6'];
+    document.getElementById('dpTeam').innerHTML = p.team.map((m,mi) => `
+      <div class="team-member">
+        <div style="width:34px;height:34px;border-radius:50%;background:${memberColors2[mi%memberColors2.length]};display:flex;align-items:center;justify-content:center;color:white;font-size:0.72rem;font-weight:700;">${m}</div>
+        <div style="font-size:0.85rem;font-weight:500;">${m}</div>
+      </div>`).join('');
+    document.getElementById('dpTasks').innerHTML = p.tasks.map((t,ti) => `
+      <div class="task-mini">
+        <div class="task-mini-dot" style="background:${ti===0?'var(--success)':ti===1?'var(--primary)':'var(--warning)'}"></div>
+        <span>${t}</span>
+      </div>`).join('');
+    document.getElementById('detailPanel').classList.add('open');
+  }
+
+  function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
+
+  function addProject() {
+    const name = document.getElementById('npName').value.trim();
+    if (!name) { CodeAxis.toast('Project name is required.','danger'); return; }
+    projects.push({ name, desc:document.getElementById('npDesc').value||'No description.', status:document.getElementById('npStatus').value, priority:document.getElementById('npPriority').value, progress:0, lead:document.getElementById('npLead').value||'Unassigned', deadline:document.getElementById('npDeadline').value||'TBD', start:document.getElementById('npStart').value||'TBD', team:[], tasks:[] });
+    renderProjects();
+    closeModal('addProjModal');
+    CodeAxis.toast('Project created!','success');
+  }
+
+  renderProjects();
+</script>
+</body>
+</html>

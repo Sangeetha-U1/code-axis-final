@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employees – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    .emp-avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; color:white; flex-shrink:0; }
+    .emp-info-cell { display:flex; align-items:center; gap:12px; }
+    .emp-name { font-weight:600; font-size:0.875rem; color:var(--text-primary); }
+    .emp-email { font-size:0.75rem; color:var(--text-muted); }
+    .filter-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:22px; }
+    .filter-row select, .filter-row input[type="text"] { border:1.5px solid var(--border); border-radius:var(--radius-md); padding:8px 12px; font-size:0.85rem; outline:none; color:var(--text-primary); font-family:var(--font-secondary); background:var(--surface); transition:var(--transition); }
+    .filter-row select:focus, .filter-row input[type="text"]:focus { border-color:var(--primary); }
+    .action-btn { background:none; border:none; cursor:pointer; padding:5px 7px; border-radius:var(--radius-sm); font-size:1rem; transition:var(--transition-fast); color:var(--text-secondary); }
+    .action-btn:hover { background:var(--primary-bg); color:var(--primary); }
+    .action-btn.danger:hover { background:var(--danger-light); color:var(--danger); }
+    .pagination { display:flex; align-items:center; gap:6px; justify-content:flex-end; margin-top:18px; }
+    .page-btn { width:34px; height:34px; border:1.5px solid var(--border); border-radius:var(--radius-md); background:var(--surface); font-size:0.82rem; cursor:pointer; color:var(--text-secondary); transition:var(--transition-fast); display:flex; align-items:center; justify-content:center; }
+    .page-btn.active { background:var(--primary); border-color:var(--primary); color:white; }
+    .page-btn:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
+    /* Modal form grid */
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
+    @media(max-width:600px){ .form-grid-2{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item active"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content" id="mainContent">
+    <!-- TOP NAVBAR -->
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Employee Management</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Employees</span></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">🔔<span class="notification-dot"></span></button>
+        <div class="user-avatar" id="userAvatarBtn">SR</div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="dropdown-item">👤 Profile</div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel">
+          <div class="notif-header"><strong style="font-size:0.875rem;">Notifications</strong><span style="font-size:0.75rem;color:var(--primary);cursor:pointer;">Mark all read</span></div>
+          <div class="notif-item unread"><div class="notif-dot"></div><div class="notif-content"><div class="notif-text">New employee Ravi Kumar onboarded</div><div class="notif-time">10 min ago</div></div></div>
+          <div class="notif-item"><div class="notif-dot" style="background:var(--warning);"></div><div class="notif-content"><div class="notif-text">Anitha's leave approved</div><div class="notif-time">2 hours ago</div></div></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="content-area">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Employees</div>
+          <div class="page-subtitle">Manage your team members and their roles</div>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-outline btn-sm">📥 Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addEmpModal')">➕ Add Employee</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid grid-4 mb-24">
+        <div class="kpi-card">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-info"><div class="kpi-value">48</div><div class="kpi-label">Total Employees</div><div class="kpi-change up">▲ 3 this month</div></div>
+        </div>
+        <div class="kpi-card success">
+          <div class="kpi-icon success">✅</div>
+          <div class="kpi-info"><div class="kpi-value">44</div><div class="kpi-label">Active</div><div class="kpi-change up">▲ 2 added</div></div>
+        </div>
+        <div class="kpi-card warning">
+          <div class="kpi-icon warning">🕐</div>
+          <div class="kpi-info"><div class="kpi-value">3</div><div class="kpi-label">On Leave</div><div class="kpi-change down">▼ 1 less</div></div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-icon danger">🔴</div>
+          <div class="kpi-info"><div class="kpi-value">1</div><div class="kpi-label">Inactive</div><div class="kpi-change down">unchanged</div></div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-row">
+        <div class="search-box" style="flex:1;max-width:280px;">
+          <span>🔍</span>
+          <input type="text" id="globalSearch" placeholder="Search by name, role, dept…" />
+        </div>
+        <select id="deptFilter" onchange="filterTable()">
+          <option value="">All Departments</option>
+          <option>Engineering</option>
+          <option>Design</option>
+          <option>HR</option>
+          <option>Frontend</option>
+          <option>Backend</option>
+          <option>QA</option>
+          <option>Management</option>
+        </select>
+        <select id="statusFilter" onchange="filterTable()">
+          <option value="">All Status</option>
+          <option>Active</option>
+          <option>On Leave</option>
+          <option>Inactive</option>
+        </select>
+        <select id="roleFilter" onchange="filterTable()">
+          <option value="">All Roles</option>
+          <option>Admin</option>
+          <option>Manager</option>
+          <option>Employee</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="resetFilters()">✖ Reset</button>
+      </div>
+
+      <!-- Employee Table -->
+      <div class="table-wrapper">
+        <table id="empTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll" style="accent-color:var(--primary);" onclick="toggleAll(this)" /></th>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Role</th>
+              <th>Phone</th>
+              <th>Join Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="empTbody">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE MODAL -->
+<div class="modal-overlay" id="addEmpModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span class="modal-title">➕ Add New Employee</span>
+      <button class="modal-close" onclick="closeModal('addEmpModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="addEmpAlert" style="display:none;"></div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">First Name <span class="required">*</span></label>
+          <div class="input-group"><span class="input-icon">👤</span><input type="text" class="form-control" id="aFirstName" placeholder="e.g. Ravi" /></div>
+          <div class="form-error" id="aFirstNameErr" style="display:none;">⚠️ Required</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="aLastName" placeholder="e.g. Kumar" />
+          <div class="form-error" id="aLastNameErr" style="display:none;">⚠️ Required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email <span class="required">*</span></label>
+        <div class="input-group"><span class="input-icon">✉️</span><input type="email" class="form-control" id="aEmail" placeholder="ravi@codeaxis.io" /></div>
+        <div class="form-error" id="aEmailErr" style="display:none;">⚠️ Enter valid email</div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <div class="input-group"><span class="input-icon">📱</span><input type="tel" class="form-control" id="aPhone" placeholder="+91 9876543210" /></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department <span class="required">*</span></label>
+          <select class="form-control" id="aDept">
+            <option value="">Select Department</option>
+            <option>Engineering</option><option>Design</option><option>HR</option>
+            <option>Frontend</option><option>Backend</option><option>QA</option><option>Management</option>
+          </select>
+          <div class="form-error" id="aDeptErr" style="display:none;">⚠️ Required</div>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Role <span class="required">*</span></label>
+          <select class="form-control" id="aRole">
+            <option value="">Select Role</option>
+            <option>Admin</option><option>Manager</option><option>Employee</option>
+          </select>
+          <div class="form-error" id="aRoleErr" style="display:none;">⚠️ Required</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Join Date</label>
+          <input type="date" class="form-control" id="aJoinDate" value="2026-05-21" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addEmpModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEmployee()">Add Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EMPLOYEE MODAL -->
+<div class="modal-overlay" id="editEmpModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span class="modal-title">✏️ Edit Employee</span>
+      <button class="modal-close" onclick="closeModal('editEmpModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">First Name</label><input type="text" class="form-control" id="eFirstName" /></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input type="text" class="form-control" id="eLastName" /></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" id="eEmail" /></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-control" id="ePhone" /></div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <select class="form-control" id="eDept">
+            <option>Engineering</option><option>Design</option><option>HR</option>
+            <option>Frontend</option><option>Backend</option><option>QA</option><option>Management</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Role</label>
+          <select class="form-control" id="eRole"><option>Admin</option><option>Manager</option><option>Employee</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="eStatus"><option>Active</option><option>On Leave</option><option>Inactive</option></select>
+        </div>
+      </div>
+      <input type="hidden" id="eEditIndex" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('editEmpModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">🗑️ Confirm Delete</span>
+      <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger"><span class="alert-icon">⚠️</span><div>Are you sure you want to remove <strong id="deleteEmpName"></strong>? This action cannot be undone.</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()" style="background:var(--danger);color:white;border:none;padding:10px 20px;border-radius:var(--radius-md);cursor:pointer;font-weight:600;">Delete</button>
+    </div>
+    <input type="hidden" id="deleteIndex" />
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script>
+  const COLORS = ['#4F46E5','#22C55E','#F59E0B','#EF4444','#3B82F6','#EC4899','#8B5CF6','#14B8A6','#F97316','#64748B'];
+
+  let employees = [
+    { first:'Sangeetha', last:'Devi', email:'sangeetha@codeaxis.io', phone:'+91 9876543210', dept:'Design', role:'Admin', joinDate:'2025-01-15', status:'Active' },
+    { first:'Praveen', last:'Kumar', email:'praveen@codeaxis.io', phone:'+91 9812345678', dept:'Frontend', role:'Manager', joinDate:'2025-02-10', status:'Active' },
+    { first:'Saireddy', last:'Raghuram', email:'sai@codeaxis.io', phone:'+91 9988776655', dept:'Frontend', role:'Employee', joinDate:'2025-03-01', status:'Active' },
+    { first:'Anitha', last:'Sharma', email:'anitha@codeaxis.io', phone:'+91 9123456789', dept:'HR', role:'Employee', joinDate:'2024-11-20', status:'On Leave' },
+    { first:'Kiran', last:'Reddy', email:'kiran@codeaxis.io', phone:'+91 9012345678', dept:'Backend', role:'Employee', joinDate:'2024-09-05', status:'Active' },
+    { first:'Divya', last:'Nair', email:'divya@codeaxis.io', phone:'+91 9345678901', dept:'QA', role:'Employee', joinDate:'2025-04-12', status:'Active' },
+    { first:'Rahul', last:'Mehta', email:'rahul@codeaxis.io', phone:'+91 9456789012', dept:'Engineering', role:'Manager', joinDate:'2024-06-18', status:'Active' },
+    { first:'Priya', last:'Singh', email:'priya@codeaxis.io', phone:'+91 9567890123', dept:'Design', role:'Employee', joinDate:'2025-05-01', status:'Active' },
+    { first:'Arun', last:'Patel', email:'arun@codeaxis.io', phone:'+91 9678901234', dept:'Backend', role:'Employee', joinDate:'2024-12-01', status:'Active' },
+    { first:'Meena', last:'Kumari', email:'meena@codeaxis.io', phone:'+91 9789012345', dept:'Management', role:'Manager', joinDate:'2024-05-20', status:'Active' },
+    { first:'Suresh', last:'Babu', email:'suresh@codeaxis.io', phone:'+91 9890123456', dept:'QA', role:'Employee', joinDate:'2025-01-28', status:'On Leave' },
+    { first:'Lakshmi', last:'Iyer', email:'lakshmi@codeaxis.io', phone:'+91 9901234567', dept:'HR', role:'Employee', joinDate:'2024-07-14', status:'Inactive' },
+  ];
+
+  const statusBadge = s => {
+    const map = { Active:'badge-success', 'On Leave':'badge-warning', Inactive:'badge-danger' };
+    return `<span class="badge ${map[s]||'badge-neutral'}">${s}</span>`;
+  };
+  const roleBadge = r => {
+    const map = { Admin:'badge-primary', Manager:'badge-info', Employee:'badge-neutral' };
+    return `<span class="badge ${map[r]||'badge-neutral'}">${r}</span>`;
+  };
+  const initials = e => (e.first[0]+e.last[0]).toUpperCase();
+  const color = i => COLORS[i % COLORS.length];
+
+  let currentPage = 1;
+  const PER_PAGE = 8;
+  let filtered = [...employees];
+  let pendingDeleteIdx = null;
+
+  function filterTable() {
+    const q = document.getElementById('globalSearch').value.toLowerCase();
+    const dept = document.getElementById('deptFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const role = document.getElementById('roleFilter').value;
+    filtered = employees.filter(e => {
+      const match = `${e.first} ${e.last} ${e.email} ${e.dept} ${e.role}`.toLowerCase().includes(q);
+      return match
+        && (!dept || e.dept === dept)
+        && (!status || e.status === status)
+        && (!role || e.role === role);
+    });
+    currentPage = 1;
+    renderTable();
+  }
+
+  function resetFilters() {
+    document.getElementById('globalSearch').value = '';
+    document.getElementById('deptFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('roleFilter').value = '';
+    filtered = [...employees];
+    currentPage = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('empTbody');
+    const start = (currentPage - 1) * PER_PAGE;
+    const page = filtered.slice(start, start + PER_PAGE);
+    if (!page.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">No employees found.</td></tr>`;
+    } else {
+      tbody.innerHTML = page.map((e, pi) => {
+        const i = start + pi;
+        return `<tr>
+          <td><input type="checkbox" style="accent-color:var(--primary);" /></td>
+          <td>
+            <div class="emp-info-cell">
+              <div class="emp-avatar" style="background:${color(employees.indexOf(e))}">${initials(e)}</div>
+              <div><div class="emp-name">${e.first} ${e.last}</div><div class="emp-email">${e.email}</div></div>
+            </div>
+          </td>
+          <td>${e.dept}</td>
+          <td>${roleBadge(e.role)}</td>
+          <td style="color:var(--text-secondary);font-size:0.83rem;">${e.phone}</td>
+          <td style="color:var(--text-secondary);font-size:0.83rem;">${e.joinDate}</td>
+          <td>${statusBadge(e.status)}</td>
+          <td>
+            <button class="action-btn" onclick="editEmployee(${employees.indexOf(e)})" title="Edit">✏️</button>
+            <button class="action-btn danger" onclick="deleteEmployee(${employees.indexOf(e)})" title="Delete">🗑️</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = Math.ceil(filtered.length / PER_PAGE);
+    const pg = document.getElementById('pagination');
+    if (total <= 1) { pg.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i = 1; i <= total; i++) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+    pg.innerHTML = html;
+  }
+
+  function goPage(n) {
+    const total = Math.ceil(filtered.length / PER_PAGE);
+    if (n < 1 || n > total) return;
+    currentPage = n;
+    renderTable();
+  }
+
+  function toggleAll(cb) {
+    document.querySelectorAll('#empTbody input[type=checkbox]').forEach(c => c.checked = cb.checked);
+  }
+
+  function addEmployee() {
+    let valid = true;
+    ['aFirstName','aLastName','aEmail','aDept','aRole'].forEach(id => document.getElementById(id).classList.remove('error','success'));
+
+    const v = id => document.getElementById(id).value.trim();
+    const err = (id, show) => document.getElementById(id+'Err').style.display = show ? 'flex' : 'none';
+
+    if (!v('aFirstName')) { document.getElementById('aFirstName').classList.add('error'); err('aFirstName',true); valid=false; }
+    else { document.getElementById('aFirstName').classList.add('success'); err('aFirstName',false); }
+    if (!v('aLastName')) { document.getElementById('aLastName').classList.add('error'); err('aLastName',true); valid=false; }
+    else { document.getElementById('aLastName').classList.add('success'); err('aLastName',false); }
+    if (!v('aEmail') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('aEmail'))) { document.getElementById('aEmail').classList.add('error'); err('aEmail',true); valid=false; }
+    else { document.getElementById('aEmail').classList.add('success'); err('aEmail',false); }
+    if (!v('aDept')) { document.getElementById('aDept').classList.add('error'); err('aDept',true); valid=false; }
+    else { document.getElementById('aDept').classList.add('success'); err('aDept',false); }
+    if (!v('aRole')) { document.getElementById('aRole').classList.add('error'); err('aRole',true); valid=false; }
+    else { document.getElementById('aRole').classList.add('success'); err('aRole',false); }
+
+    if (!valid) {
+      const al = document.getElementById('addEmpAlert');
+      al.style.display='block'; al.className='alert alert-danger';
+      al.innerHTML='<span class="alert-icon">❌</span><div>Please fix the highlighted fields.</div>';
+      return;
+    }
+
+    employees.push({ first:v('aFirstName'), last:v('aLastName'), email:v('aEmail'), phone:document.getElementById('aPhone').value||'–', dept:v('aDept'), role:v('aRole'), joinDate:document.getElementById('aJoinDate').value, status:'Active' });
+    filtered = [...employees];
+    renderTable();
+    closeModal('addEmpModal');
+    ['aFirstName','aLastName','aEmail','aPhone','aDept','aRole'].forEach(id => { document.getElementById(id).value=''; document.getElementById(id).classList.remove('error','success'); });
+    document.getElementById('addEmpAlert').style.display='none';
+    CodeAxis.toast('Employee added successfully!','success');
+  }
+
+  function editEmployee(i) {
+    const e = employees[i];
+    document.getElementById('eFirstName').value = e.first;
+    document.getElementById('eLastName').value = e.last;
+    document.getElementById('eEmail').value = e.email;
+    document.getElementById('ePhone').value = e.phone;
+    document.getElementById('eDept').value = e.dept;
+    document.getElementById('eRole').value = e.role;
+    document.getElementById('eStatus').value = e.status;
+    document.getElementById('eEditIndex').value = i;
+    openModal('editEmpModal');
+  }
+
+  function saveEdit() {
+    const i = parseInt(document.getElementById('eEditIndex').value);
+    employees[i].first = document.getElementById('eFirstName').value;
+    employees[i].last = document.getElementById('eLastName').value;
+    employees[i].email = document.getElementById('eEmail').value;
+    employees[i].phone = document.getElementById('ePhone').value;
+    employees[i].dept = document.getElementById('eDept').value;
+    employees[i].role = document.getElementById('eRole').value;
+    employees[i].status = document.getElementById('eStatus').value;
+    filtered = [...employees];
+    renderTable();
+    closeModal('editEmpModal');
+    CodeAxis.toast('Employee updated successfully!','success');
+  }
+
+  function deleteEmployee(i) {
+    pendingDeleteIdx = i;
+    document.getElementById('deleteEmpName').textContent = `${employees[i].first} ${employees[i].last}`;
+    document.getElementById('deleteIndex').value = i;
+    openModal('deleteModal');
+  }
+
+  function confirmDelete() {
+    employees.splice(pendingDeleteIdx, 1);
+    filtered = [...employees];
+    renderTable();
+    closeModal('deleteModal');
+    CodeAxis.toast('Employee removed.','danger');
+  }
+
+  // Live search
+  document.getElementById('globalSearch').addEventListener('input', filterTable);
+
+  // Init
+  filtered = [...employees];
+  renderTable();
+</script>
+</body>
+</html>

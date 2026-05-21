@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reports & Analytics – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas { max-height: 260px; }
+    .filter-bar { display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:24px; }
+    .filter-bar select, .filter-bar input { border:1.5px solid var(--border);border-radius:var(--radius-md);padding:8px 12px;font-size:0.85rem;outline:none;color:var(--text-primary);font-family:var(--font-secondary); }
+    .filter-bar select:focus, .filter-bar input:focus { border-color:var(--primary); }
+    .summary-table th { background: var(--primary-bg); color: var(--primary); }
+    .export-row { display:flex;gap:10px;justify-content:flex-end;margin-bottom:20px; }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item active"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+                <div class="nav-section-title">Account</div>
+
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+
+    </nav>
+    <div class="sidebar-footer"><a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a></div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content" id="mainContent">
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div><div class="navbar-title">Reports & Analytics</div><div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Reports</span></div></div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">🔔<span class="notification-dot"></span></button>
+        <div class="user-avatar" id="userAvatarBtn">SG</div>
+        <div class="dropdown-menu" id="userMenu"><a class="dropdown-item danger" href="login.html">🚪 Logout</a></div>
+        <div class="notification-panel" id="notifPanel"></div>
+      </div>
+    </nav>
+
+    <div class="content-area">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Reports & Analytics</div>
+          <div class="page-subtitle">Detailed performance data across all modules</div>
+        </div>
+        <div class="export-row">
+          <button class="btn btn-outline btn-sm">📥 Export CSV</button>
+          <button class="btn btn-primary btn-sm">📄 Export PDF</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <span style="font-weight:600;font-size:0.875rem;">Filters:</span>
+        <select><option>All Departments</option><option>Engineering</option><option>Design</option><option>HR</option></select>
+        <select><option>This Month</option><option>Last 3 Months</option><option>This Year</option></select>
+        <input type="date" value="2026-05-01" />
+        <input type="date" value="2026-05-21" />
+        <button class="btn btn-primary btn-sm">Apply</button>
+        <button class="btn btn-ghost btn-sm">Reset</button>
+      </div>
+
+      <!-- KPI Summary -->
+      <div class="grid grid-4 mb-24">
+        <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-info"><div class="kpi-value">86%</div><div class="kpi-label">Overall Efficiency</div><div class="kpi-change up">▲ 4% vs last month</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon success">✅</div><div class="kpi-info"><div class="kpi-value">127</div><div class="kpi-label">Tasks Completed</div><div class="kpi-change up">▲ 23 more</div></div></div>
+        <div class="kpi-card warning"><div class="kpi-icon warning">⏱️</div><div class="kpi-info"><div class="kpi-value">2.4h</div><div class="kpi-label">Avg Response Time</div><div class="kpi-change down">▼ 0.3h better</div></div></div>
+        <div class="kpi-card danger"><div class="kpi-icon danger">🐛</div><div class="kpi-info"><div class="kpi-value">8</div><div class="kpi-label">Open Issues</div><div class="kpi-change down">▼ 3 resolved</div></div></div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="grid grid-2 mb-24">
+        <div class="card" style="padding:22px;">
+          <div class="card-header"><span class="card-title">📉 Attendance Trend (6 Months)</span></div>
+          <canvas id="attendTrendChart"></canvas>
+        </div>
+        <div class="card" style="padding:22px;">
+          <div class="card-header"><span class="card-title">📊 Department Performance</span></div>
+          <canvas id="deptChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="grid grid-3 mb-24">
+        <div class="card" style="padding:22px;">
+          <div class="card-header"><span class="card-title">🎯 Task Completion Rate</span></div>
+          <canvas id="taskCompChart"></canvas>
+        </div>
+        <div class="card" style="padding:22px;">
+          <div class="card-header"><span class="card-title">⏰ Hours Worked</span></div>
+          <canvas id="hoursChart"></canvas>
+        </div>
+        <div class="card" style="padding:22px;">
+          <div class="card-header"><span class="card-title">🔁 Project Status Split</span></div>
+          <canvas id="projSplitChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Summary Table -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Employee Performance Summary</span>
+          <div class="search-box" style="width:200px;"><span>🔍</span><input type="text" placeholder="Search..." id="globalSearch" /></div>
+        </div>
+        <div class="table-wrapper" style="border:none;box-shadow:none;">
+          <table class="summary-table">
+            <thead><tr><th>Employee</th><th>Department</th><th>Tasks Done</th><th>Attendance</th><th>Projects</th><th>Score</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td data-searchable><strong>Sangeetha</strong></td><td>Design</td><td>32</td><td>96%</td><td>4</td><td><strong style="color:var(--success);">98</strong></td><td><span class="badge badge-success">Excellent</span></td></tr>
+              <tr><td data-searchable><strong>Praveen</strong></td><td>Frontend</td><td>28</td><td>92%</td><td>3</td><td><strong style="color:var(--primary);">95</strong></td><td><span class="badge badge-primary">Very Good</span></td></tr>
+              <tr><td data-searchable><strong>Saireddy</strong></td><td>Frontend</td><td>25</td><td>88%</td><td>5</td><td><strong style="color:var(--warning);">91</strong></td><td><span class="badge badge-warning">Good</span></td></tr>
+              <tr><td data-searchable>Anitha</td><td>HR</td><td>18</td><td>85%</td><td>2</td><td>82</td><td><span class="badge badge-neutral">Average</span></td></tr>
+              <tr><td data-searchable>Kiran</td><td>Backend</td><td>30</td><td>90%</td><td>4</td><td><strong style="color:var(--primary);">94</strong></td><td><span class="badge badge-primary">Very Good</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="main.js"></script>
+<script>
+  const mkChart = (id, type, labels, datasets, extra={}) => new Chart(document.getElementById(id).getContext('2d'), { type, data: { labels, datasets }, options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: type !== 'doughnut' && type !== 'pie' ? { x: { grid: { display: false } }, y: { grid: { color: '#F3F4F6' }, beginAtZero: true } } : undefined, ...extra } });
+
+  mkChart('attendTrendChart', 'line', ['Dec','Jan','Feb','Mar','Apr','May'], [
+    { label: 'Attendance %', data: [82,85,88,84,87,89], borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,0.08)', fill: true, tension: 0.4, borderWidth: 2.5 }
+  ]);
+  mkChart('deptChart', 'bar', ['Design','Frontend','Backend','HR','QA'], [
+    { label: 'Score', data: [96,93,88,82,78], backgroundColor: ['#4F46E5','#22C55E','#3B82F6','#F59E0B','#EC4899'], borderRadius: 6 }
+  ]);
+  mkChart('taskCompChart', 'doughnut', ['Done','In Progress','Pending'], [
+    { data: [127,45,18], backgroundColor: ['#22C55E','#4F46E5','#EF4444'], borderWidth: 0 }
+  ]);
+  mkChart('hoursChart', 'bar', ['Mon','Tue','Wed','Thu','Fri'], [
+    { label: 'Hours', data: [8.2, 7.8, 9.1, 8.5, 7.2], backgroundColor: '#818CF8', borderRadius: 6 }
+  ]);
+  mkChart('projSplitChart', 'pie', ['Done','Active','On Hold','New'], [
+    { data: [5,4,2,1], backgroundColor: ['#22C55E','#4F46E5','#F59E0B','#94A3B8'], borderWidth: 0 }
+  ]);
+</script>
+</body>
+</html>

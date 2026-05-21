@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    /* Kanban */
+    .kanban-board { display:flex; gap:18px; overflow-x:auto; padding-bottom:12px; align-items:flex-start; }
+    .kanban-col { flex-shrink:0; width:280px; background:var(--bg); border-radius:var(--radius-lg); display:flex; flex-direction:column; border:1px solid var(--border); }
+    .kanban-col-header { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+    .kanban-col-title { font-weight:700; font-size:0.875rem; display:flex; align-items:center; gap:8px; }
+    .kanban-count { background:var(--border); color:var(--text-secondary); font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:var(--radius-full); }
+    .kanban-cards { padding:12px; display:flex; flex-direction:column; gap:10px; min-height:100px; }
+    .task-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; cursor:grab; transition:var(--transition); }
+    .task-card:hover { box-shadow:var(--shadow-md); border-color:var(--primary); }
+    .task-card.dragging { opacity:0.5; }
+    .task-card-title { font-weight:600; font-size:0.875rem; color:var(--text-primary); margin-bottom:8px; line-height:1.4; }
+    .task-card-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+    .task-card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+    .deadline-tag { font-size:0.72rem; display:flex; align-items:center; gap:4px; color:var(--text-muted); }
+    .deadline-tag.urgent { color:var(--danger); font-weight:600; }
+    .assignee-av { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.62rem; font-weight:700; color:white; }
+    .kanban-add-btn { padding:10px 16px; text-align:center; font-size:0.8rem; color:var(--text-muted); cursor:pointer; border-radius:var(--radius-md); transition:var(--transition-fast); }
+    .kanban-add-btn:hover { background:var(--surface); color:var(--primary); }
+    /* View toggle */
+    .view-toggle { display:flex; border:1.5px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
+    .view-btn { padding:7px 14px; background:none; border:none; cursor:pointer; font-size:0.85rem; transition:var(--transition-fast); color:var(--text-secondary); }
+    .view-btn.active { background:var(--primary); color:white; }
+    .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
+    @media(max-width:600px){ .form-grid-2{grid-template-columns:1fr;} }
+    /* Priority dot */
+    .pri-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block; }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item active"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content" id="mainContent">
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Task Management</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Tasks</span></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">🔔<span class="notification-dot"></span></button>
+        <div class="user-avatar" id="userAvatarBtn">SR</div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="dropdown-item">👤 Profile</div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel"></div>
+      </div>
+    </nav>
+
+    <div class="content-area">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Tasks</div>
+          <div class="page-subtitle">Manage, assign and track tasks across projects</div>
+        </div>
+        <div class="page-header-right">
+          <div class="view-toggle">
+            <button class="view-btn active" id="kanbanViewBtn" onclick="setView('kanban')">⊞ Kanban</button>
+            <button class="view-btn" id="listViewBtn" onclick="setView('list')">☰ List</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('addTaskModal')">➕ Add Task</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid grid-4 mb-24">
+        <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-info"><div class="kpi-value" id="totalCount">0</div><div class="kpi-label">Total Tasks</div></div></div>
+        <div class="kpi-card success"><div class="kpi-icon success">✅</div><div class="kpi-info"><div class="kpi-value" id="doneCount">0</div><div class="kpi-label">Completed</div><div class="kpi-change up">this sprint</div></div></div>
+        <div class="kpi-card warning"><div class="kpi-icon warning">🔄</div><div class="kpi-info"><div class="kpi-value" id="inproCount">0</div><div class="kpi-label">In Progress</div></div></div>
+        <div class="kpi-card danger"><div class="kpi-icon danger">⏳</div><div class="kpi-info"><div class="kpi-value" id="overdueCount">0</div><div class="kpi-label">Overdue</div><div class="kpi-change down">needs attention</div></div></div>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:22px;">
+        <div class="search-box" style="flex:1;max-width:260px;">
+          <span>🔍</span><input type="text" id="taskSearch" placeholder="Search tasks…" oninput="renderAll()" />
+        </div>
+        <select id="taskProject" class="form-control" style="width:auto;" onchange="renderAll()">
+          <option value="">All Projects</option>
+          <option>CodeAxis Platform</option><option>HR Portal Redesign</option><option>Task Management Module</option><option>Analytics Dashboard v2</option><option>Payroll Module</option>
+        </select>
+        <select id="taskPriority" class="form-control" style="width:auto;" onchange="renderAll()">
+          <option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+        <select id="taskAssignee" class="form-control" style="width:auto;" onchange="renderAll()">
+          <option value="">All Assignees</option><option>Sangeetha</option><option>Praveen</option><option>Saireddy</option><option>Kiran</option><option>Divya</option>
+        </select>
+      </div>
+
+      <!-- Kanban View -->
+      <div id="kanbanView">
+        <div class="kanban-board" id="kanbanBoard">
+          <div class="kanban-col" id="col-todo" data-status="To Do">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title"><span style="color:#94A3B8;">●</span> To Do <span class="kanban-count" id="cnt-todo">0</span></div>
+            </div>
+            <div class="kanban-cards" id="cards-todo" ondragover="allowDrop(event)" ondrop="drop(event,'To Do')"></div>
+            <div class="kanban-add-btn" onclick="quickAdd('To Do')">＋ Add task</div>
+          </div>
+          <div class="kanban-col" id="col-inpro" data-status="In Progress">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title"><span style="color:var(--primary);">●</span> In Progress <span class="kanban-count" id="cnt-inpro">0</span></div>
+            </div>
+            <div class="kanban-cards" id="cards-inpro" ondragover="allowDrop(event)" ondrop="drop(event,'In Progress')"></div>
+            <div class="kanban-add-btn" onclick="quickAdd('In Progress')">＋ Add task</div>
+          </div>
+          <div class="kanban-col" id="col-review" data-status="Review">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title"><span style="color:var(--warning);">●</span> Review <span class="kanban-count" id="cnt-review">0</span></div>
+            </div>
+            <div class="kanban-cards" id="cards-review" ondragover="allowDrop(event)" ondrop="drop(event,'Review')"></div>
+            <div class="kanban-add-btn" onclick="quickAdd('Review')">＋ Add task</div>
+          </div>
+          <div class="kanban-col" id="col-done" data-status="Done">
+            <div class="kanban-col-header">
+              <div class="kanban-col-title"><span style="color:var(--success);">●</span> Done <span class="kanban-count" id="cnt-done">0</span></div>
+            </div>
+            <div class="kanban-cards" id="cards-done" ondragover="allowDrop(event)" ondrop="drop(event,'Done')"></div>
+            <div class="kanban-add-btn" onclick="quickAdd('Done')">＋ Add task</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div id="listView" style="display:none;">
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th><input type="checkbox" style="accent-color:var(--primary);" /></th><th>Task</th><th>Project</th><th>Assignee</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="taskListBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <span class="modal-title">➕ New Task</span>
+      <button class="modal-close" onclick="closeModal('addTaskModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Task Title <span class="required">*</span></label><input type="text" class="form-control" id="ntTitle" placeholder="e.g. Design login page mockup" /></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="ntDesc" rows="2" placeholder="Details about the task..." style="resize:none;"></textarea></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Project</label><select class="form-control" id="ntProject"><option>CodeAxis Platform</option><option>HR Portal Redesign</option><option>Task Management Module</option><option>Analytics Dashboard v2</option><option>Payroll Module</option></select></div>
+        <div class="form-group"><label class="form-label">Assignee</label><select class="form-control" id="ntAssignee"><option>Sangeetha</option><option>Praveen</option><option>Saireddy</option><option>Kiran</option><option>Divya</option></select></div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group"><label class="form-label">Priority</label><select class="form-control" id="ntPriority"><option>High</option><option>Medium</option><option>Low</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="ntStatus"><option>To Do</option><option>In Progress</option><option>Review</option><option>Done</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-control" id="ntDeadline" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addTask()">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script>
+  let tasks = [
+    { title:'Design login page mockup', desc:'Create Figma mockup for new login page UI.', project:'CodeAxis Platform', assignee:'Sangeetha', priority:'High', status:'Done', deadline:'2026-05-10' },
+    { title:'Implement authentication module', desc:'Build login, register, forgot password pages.', project:'CodeAxis Platform', assignee:'Praveen', priority:'High', status:'Done', deadline:'2026-05-15' },
+    { title:'Build employee table component', desc:'Reusable table with sort, filter, pagination.', project:'CodeAxis Platform', assignee:'Saireddy', priority:'High', status:'Done', deadline:'2026-05-18' },
+    { title:'Create attendance tracker UI', desc:'Mark in/out, calendar view, history table.', project:'CodeAxis Platform', assignee:'Saireddy', priority:'High', status:'In Progress', deadline:'2026-05-25' },
+    { title:'Projects card + detail UI', desc:'Project cards with progress bar and detail panel.', project:'CodeAxis Platform', assignee:'Saireddy', priority:'Medium', status:'In Progress', deadline:'2026-05-28' },
+    { title:'Design KPI dashboard cards', desc:'Color-coded KPI stat cards for dashboard.', project:'Analytics Dashboard v2', assignee:'Sangeetha', priority:'High', status:'Done', deadline:'2026-04-30' },
+    { title:'Integrate Chart.js graphs', desc:'Line, bar, doughnut charts for reports page.', project:'Analytics Dashboard v2', assignee:'Sangeetha', priority:'High', status:'Done', deadline:'2026-05-05' },
+    { title:'HR portal form validation', desc:'Add error/success states to all HR forms.', project:'HR Portal Redesign', assignee:'Praveen', priority:'Medium', status:'Review', deadline:'2026-05-27' },
+    { title:'Mobile responsiveness audit', desc:'Test all pages on mobile, tablet viewports.', project:'CodeAxis Platform', assignee:'Saireddy', priority:'Medium', status:'To Do', deadline:'2026-06-05' },
+    { title:'Dark mode design pass', desc:'Ensure dark mode CSS variables work globally.', project:'CodeAxis Platform', assignee:'Sangeetha', priority:'Low', status:'To Do', deadline:'2026-06-10' },
+    { title:'Payroll module wireframes', desc:'Draft low-fi wireframes for payroll module.', project:'Payroll Module', assignee:'Kiran', priority:'High', status:'To Do', deadline:'2026-05-23' },
+    { title:'Task deadline notifications', desc:'Alert banner when a task deadline is near.', project:'Task Management Module', assignee:'Divya', priority:'Medium', status:'Review', deadline:'2026-05-30' },
+  ];
+
+  const priColors = { High:'#EF4444', Medium:'#F59E0B', Low:'#22C55E' };
+  const statusBadge = s => {
+    const m = { 'To Do':'badge-neutral', 'In Progress':'badge-primary', 'Review':'badge-warning', 'Done':'badge-success' };
+    return `<span class="badge ${m[s]||'badge-neutral'}">${s}</span>`;
+  };
+  const assigneeColors = { Sangeetha:'#4F46E5', Praveen:'#22C55E', Saireddy:'#F59E0B', Kiran:'#3B82F6', Divya:'#EC4899' };
+  const initials = n => n.split(' ').map(p=>p[0]).join('').toUpperCase();
+  const today = new Date();
+
+  function getFiltered() {
+    const q = document.getElementById('taskSearch').value.toLowerCase();
+    const proj = document.getElementById('taskProject').value;
+    const pri = document.getElementById('taskPriority').value;
+    const asg = document.getElementById('taskAssignee').value;
+    return tasks.filter(t =>
+      t.title.toLowerCase().includes(q) &&
+      (!proj || t.project === proj) &&
+      (!pri || t.priority === pri) &&
+      (!asg || t.assignee === asg)
+    );
+  }
+
+  function renderAll() {
+    renderKanban();
+    renderList();
+    updateCounts();
+  }
+
+  function updateCounts() {
+    const all = tasks;
+    document.getElementById('totalCount').textContent = all.length;
+    document.getElementById('doneCount').textContent = all.filter(t=>t.status==='Done').length;
+    document.getElementById('inproCount').textContent = all.filter(t=>t.status==='In Progress').length;
+    const overdue = all.filter(t => t.status!=='Done' && t.deadline && new Date(t.deadline) < today).length;
+    document.getElementById('overdueCount').textContent = overdue;
+  }
+
+  function renderKanban() {
+    const list = getFiltered();
+    const cols = ['To Do','In Progress','Review','Done'];
+    const ids = { 'To Do':'todo','In Progress':'inpro','Review':'review','Done':'done' };
+    cols.forEach(st => {
+      const colTasks = list.filter(t => t.status === st);
+      document.getElementById('cnt-'+ids[st]).textContent = colTasks.length;
+      document.getElementById('cards-'+ids[st]).innerHTML = colTasks.map((t,ci) => {
+        const gi = tasks.indexOf(t);
+        const isOverdue = t.status!=='Done' && t.deadline && new Date(t.deadline) < today;
+        return `<div class="task-card" draggable="true" ondragstart="drag(event,${gi})" id="task-${gi}">
+          <div class="task-card-title">${t.title}</div>
+          <div class="task-card-meta">
+            <span class="badge badge-neutral" style="font-size:0.68rem;">${t.project.split(' ')[0]}</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;color:${priColors[t.priority]};"><span class="pri-dot" style="background:${priColors[t.priority]};"></span>${t.priority}</span>
+          </div>
+          <div class="task-card-footer">
+            <span class="deadline-tag ${isOverdue?'urgent':''}">📅 ${t.deadline||'No deadline'}</span>
+            <div class="assignee-av" style="background:${assigneeColors[t.assignee]||'#64748B'}" title="${t.assignee}">${initials(t.assignee)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    });
+  }
+
+  function renderList() {
+    const list = getFiltered();
+    document.getElementById('taskListBody').innerHTML = list.map((t,li) => {
+      const gi = tasks.indexOf(t);
+      const isOverdue = t.status!=='Done' && t.deadline && new Date(t.deadline) < today;
+      return `<tr>
+        <td><input type="checkbox" style="accent-color:var(--primary);" /></td>
+        <td>
+          <div style="font-weight:600;font-size:0.875rem;">${t.title}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">${t.desc}</div>
+        </td>
+        <td style="font-size:0.82rem;">${t.project}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="assignee-av" style="background:${assigneeColors[t.assignee]||'#64748B'}">${initials(t.assignee)}</div>
+            <span style="font-size:0.82rem;">${t.assignee}</span>
+          </div>
+        </td>
+        <td><span style="display:flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:600;color:${priColors[t.priority]};"><span class="pri-dot" style="background:${priColors[t.priority]};"></span>${t.priority}</span></td>
+        <td style="font-size:0.82rem;" class="${isOverdue?'':''}"><span style="color:${isOverdue?'var(--danger)':'var(--text-secondary)'};">${t.deadline||'–'}</span></td>
+        <td>${statusBadge(t.status)}</td>
+        <td>
+          <select style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;font-size:0.78rem;outline:none;color:var(--text-secondary);" onchange="changeStatus(${gi},this.value)">
+            <option value="">Move to…</option>
+            <option>To Do</option><option>In Progress</option><option>Review</option><option>Done</option>
+          </select>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function changeStatus(i, st) {
+    if (!st) return;
+    tasks[i].status = st;
+    renderAll();
+    CodeAxis.toast(`Task moved to "${st}"`, 'success');
+  }
+
+  // Drag & drop
+  let dragIdx = null;
+  function drag(e, i) { dragIdx = i; e.currentTarget.classList.add('dragging'); }
+  function allowDrop(e) { e.preventDefault(); }
+  function drop(e, status) {
+    e.preventDefault();
+    if (dragIdx === null) return;
+    tasks[dragIdx].status = status;
+    dragIdx = null;
+    renderAll();
+  }
+
+  function setView(v) {
+    document.getElementById('kanbanView').style.display = v==='kanban'?'block':'none';
+    document.getElementById('listView').style.display = v==='list'?'block':'none';
+    document.getElementById('kanbanViewBtn').classList.toggle('active',v==='kanban');
+    document.getElementById('listViewBtn').classList.toggle('active',v==='list');
+  }
+
+  function addTask() {
+    const title = document.getElementById('ntTitle').value.trim();
+    if (!title) { CodeAxis.toast('Task title is required.','danger'); return; }
+    tasks.push({
+      title, desc:document.getElementById('ntDesc').value,
+      project:document.getElementById('ntProject').value,
+      assignee:document.getElementById('ntAssignee').value,
+      priority:document.getElementById('ntPriority').value,
+      status:document.getElementById('ntStatus').value,
+      deadline:document.getElementById('ntDeadline').value
+    });
+    renderAll();
+    closeModal('addTaskModal');
+    CodeAxis.toast('Task created!','success');
+  }
+
+  function quickAdd(status) {
+    const title = prompt(`Task title for "${status}":`);
+    if (!title) return;
+    tasks.push({ title, desc:'', project:'CodeAxis Platform', assignee:'Saireddy', priority:'Medium', status, deadline:'' });
+    renderAll();
+  }
+
+  renderAll();
+</script>
+</body>
+</html>

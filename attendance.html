@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .cal-day-label { text-align:center; font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; padding:6px 0; }
+    .cal-day { border-radius:var(--radius-md); padding:8px 6px; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-size:0.82rem; font-weight:500; transition:var(--transition-fast); border:1.5px solid transparent; background:var(--bg); color:var(--text-primary); }
+    .cal-day:hover { border-color:var(--primary); background:var(--primary-bg); }
+    .cal-day.empty { background:transparent; cursor:default; border:none; }
+    .cal-day.present { background:var(--success-light); color:#166534; border-color:#BBF7D0; }
+    .cal-day.absent { background:var(--danger-light); color:#991B1B; border-color:#FECACA; }
+    .cal-day.leave { background:var(--warning-light); color:#92400E; border-color:#FDE68A; }
+    .cal-day.today { border-color:var(--primary); box-shadow:0 0 0 2px rgba(79,70,229,0.2); font-weight:700; }
+    .cal-day.future { color:var(--text-muted); background:var(--surface); }
+    .cal-dot { width:6px; height:6px; border-radius:50%; margin-top:3px; background:currentColor; opacity:0.6; }
+    .mark-btn { padding:14px 28px; border:none; border-radius:var(--radius-lg); font-size:1rem; font-weight:700; cursor:pointer; transition:var(--transition); font-family:var(--font-primary); display:flex; align-items:center; gap:10px; }
+    .mark-btn.in { background:var(--success); color:white; box-shadow:0 4px 20px rgba(34,197,94,0.35); }
+    .mark-btn.in:hover { background:#16A34A; transform:translateY(-1px); }
+    .mark-btn.out { background:var(--danger); color:white; box-shadow:0 4px 20px rgba(239,68,68,0.35); }
+    .mark-btn.out:hover { background:#DC2626; transform:translateY(-1px); }
+    .mark-btn:disabled { background:var(--border); color:var(--text-muted); cursor:not-allowed; box-shadow:none; transform:none; }
+    .time-display { font-family:var(--font-primary); font-size:2.4rem; font-weight:700; color:var(--text-primary); letter-spacing:2px; }
+    .status-pill { display:inline-flex; align-items:center; gap:8px; padding:8px 18px; border-radius:var(--radius-full); font-size:0.85rem; font-weight:600; }
+    .status-pill.in { background:var(--success-light); color:#166534; }
+    .status-pill.out { background:var(--danger-light); color:#991B1B; }
+    .status-pill.none { background:var(--bg); color:var(--text-muted); border:1px solid var(--border); }
+    .timeline { display:flex; flex-direction:column; gap:0; }
+    .tl-item { display:flex; gap:16px; align-items:flex-start; padding-bottom:18px; }
+    .tl-left { display:flex; flex-direction:column; align-items:center; }
+    .tl-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+    .tl-line { width:2px; flex:1; min-height:24px; background:var(--border); margin-top:4px; }
+    .tl-item:last-child .tl-line { display:none; }
+    .tl-content { flex:1; padding-top:6px; }
+    .tl-title { font-weight:600; font-size:0.875rem; color:var(--text-primary); }
+    .tl-meta { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html" class="nav-item active"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="main-content" id="mainContent">
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Attendance</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Attendance</span></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">🔔<span class="notification-dot"></span></button>
+        <div class="user-avatar" id="userAvatarBtn">SR</div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="dropdown-item">👤 Profile</div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel"></div>
+      </div>
+    </nav>
+
+    <div class="content-area">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Attendance Tracker</div>
+          <div class="page-subtitle">Mark your attendance and view your monthly history</div>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-outline btn-sm">📥 Export Report</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid grid-4 mb-24">
+        <div class="kpi-card success">
+          <div class="kpi-icon success">✅</div>
+          <div class="kpi-info"><div class="kpi-value" id="presentCount">18</div><div class="kpi-label">Present Days</div><div class="kpi-change up">This Month</div></div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-icon danger">❌</div>
+          <div class="kpi-info"><div class="kpi-value">2</div><div class="kpi-label">Absent Days</div><div class="kpi-change down">▼ 1 vs last month</div></div>
+        </div>
+        <div class="kpi-card warning">
+          <div class="kpi-icon warning">🏖️</div>
+          <div class="kpi-info"><div class="kpi-value">1</div><div class="kpi-label">Leave Taken</div><div class="kpi-change">out of 12 allowed</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-info"><div class="kpi-value">90%</div><div class="kpi-label">Attendance Rate</div><div class="kpi-change up">▲ 2% vs last month</div></div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="align-items:start;gap:24px;">
+
+        <!-- Left: Mark Attendance + Status -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Mark Attendance Card -->
+          <div class="card" style="padding:28px;text-align:center;">
+            <div style="margin-bottom:20px;">
+              <div class="time-display" id="liveClock">00:00:00</div>
+              <div style="font-size:0.85rem;color:var(--text-muted);margin-top:6px;" id="liveDate">Loading...</div>
+            </div>
+            <div id="attendStatus" class="status-pill none" style="margin:0 auto 24px;width:fit-content;">
+              ⬤ &nbsp;Not marked today
+            </div>
+            <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+              <button class="mark-btn in" id="checkInBtn" onclick="markAttendance('in')">✅ Check In</button>
+              <button class="mark-btn out" id="checkOutBtn" onclick="markAttendance('out')" disabled>🚪 Check Out</button>
+            </div>
+            <div id="markMsg" style="margin-top:16px;font-size:0.85rem;color:var(--text-secondary);"></div>
+          </div>
+
+          <!-- Today's Timeline -->
+          <div class="card" style="padding:24px;">
+            <div class="card-header" style="margin-bottom:16px;"><span class="card-title">⏱️ Today's Log</span></div>
+            <div class="timeline" id="todayLog">
+              <div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px;">No logs yet today.</div>
+            </div>
+          </div>
+
+          <!-- Apply Leave -->
+          <div class="card" style="padding:24px;">
+            <div class="card-header" style="margin-bottom:16px;"><span class="card-title">🏖️ Apply for Leave</span></div>
+            <div class="form-group">
+              <label class="form-label">Leave Type <span class="required">*</span></label>
+              <select class="form-control" id="leaveType">
+                <option value="">Select Type</option>
+                <option>Sick Leave</option><option>Casual Leave</option><option>Earned Leave</option><option>Maternity/Paternity</option>
+              </select>
+            </div>
+            <div class="grid grid-2" style="gap:12px;">
+              <div class="form-group mb-0">
+                <label class="form-label">From Date</label>
+                <input type="date" class="form-control" id="leaveFrom" />
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label">To Date</label>
+                <input type="date" class="form-control" id="leaveTo" />
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label">Reason</label>
+              <textarea class="form-control" id="leaveReason" rows="2" placeholder="Brief reason for leave..." style="resize:none;"></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;" onclick="applyLeave()">Submit Leave Request</button>
+            <div id="leaveMsg" style="margin-top:10px;display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Right: Calendar + History Table -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Calendar -->
+          <div class="card" style="padding:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+              <button class="navbar-btn" onclick="changeMonth(-1)">‹</button>
+              <span style="font-family:var(--font-primary);font-weight:700;font-size:1rem;" id="calMonthTitle"></span>
+              <button class="navbar-btn" onclick="changeMonth(1)">›</button>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-day-label">Sun</div><div class="cal-day-label">Mon</div><div class="cal-day-label">Tue</div>
+              <div class="cal-day-label">Wed</div><div class="cal-day-label">Thu</div><div class="cal-day-label">Fri</div><div class="cal-day-label">Sat</div>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
+              <span style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-secondary);"><span style="width:12px;height:12px;border-radius:3px;background:var(--success-light);border:1px solid #BBF7D0;display:inline-block;"></span>Present</span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-secondary);"><span style="width:12px;height:12px;border-radius:3px;background:var(--danger-light);border:1px solid #FECACA;display:inline-block;"></span>Absent</span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--text-secondary);"><span style="width:12px;height:12px;border-radius:3px;background:var(--warning-light);border:1px solid #FDE68A;display:inline-block;"></span>Leave</span>
+            </div>
+          </div>
+
+          <!-- Attendance History Table -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">📋 Recent Attendance</span></div>
+            <div class="table-wrapper" style="border:none;box-shadow:none;">
+              <table>
+                <thead><tr><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th></tr></thead>
+                <tbody id="attHistTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script>
+  // ---- Clock ----
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('liveClock').textContent = `${h}:${m}:${s}`;
+    document.getElementById('liveDate').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ---- Attendance Mark ----
+  let checkedIn = false, checkInTime = null;
+  const logs = [];
+
+  function markAttendance(type) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+    if (type === 'in') {
+      checkedIn = true;
+      checkInTime = now;
+      document.getElementById('checkInBtn').disabled = true;
+      document.getElementById('checkOutBtn').disabled = false;
+      const st = document.getElementById('attendStatus');
+      st.className = 'status-pill in'; st.innerHTML = '⬤ &nbsp;Checked In at ' + timeStr;
+      document.getElementById('markMsg').textContent = '✅ You have checked in successfully!';
+      logs.push({ type:'in', time:timeStr });
+    } else {
+      checkedIn = false;
+      document.getElementById('checkOutBtn').disabled = true;
+      const duration = checkInTime ? Math.round((now - checkInTime) / 60000) : 0;
+      const hrs = Math.floor(duration/60), mins = duration%60;
+      const st = document.getElementById('attendStatus');
+      st.className = 'status-pill out'; st.innerHTML = `⬤ &nbsp;Checked Out at ${timeStr} (${hrs}h ${mins}m)`;
+      document.getElementById('markMsg').textContent = `🚪 Checked out. Total: ${hrs}h ${mins}m worked.`;
+      logs.push({ type:'out', time:timeStr });
+    }
+    renderLog();
+  }
+
+  function renderLog() {
+    const container = document.getElementById('todayLog');
+    if (!logs.length) { container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px;">No logs yet today.</div>'; return; }
+    container.innerHTML = logs.map((l,i) => `
+      <div class="tl-item">
+        <div class="tl-left">
+          <div class="tl-icon" style="background:${l.type==='in'?'var(--success-light)':'var(--danger-light)'};">${l.type==='in'?'✅':'🚪'}</div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-content">
+          <div class="tl-title">${l.type==='in'?'Checked In':'Checked Out'}</div>
+          <div class="tl-meta">${l.time} · Today</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ---- Calendar ----
+  let calYear, calMonth;
+  const today = new Date();
+
+  const attendData = {};
+  // Seed some dummy data for current month
+  const y = today.getFullYear(), mo = today.getMonth();
+  for (let d = 1; d < today.getDate(); d++) {
+    const key = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(y, mo, d).getDay();
+    if (dow === 0 || dow === 6) continue; // weekends
+    attendData[key] = (d === 5 || d === 12) ? 'absent' : (d === 8) ? 'leave' : 'present';
+  }
+
+  function renderCalendar() {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('calMonthTitle').textContent = `${months[calMonth]} ${calYear}`;
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+    const grid = document.getElementById('calGrid');
+    let html = '';
+    for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+      const isFuture = new Date(calYear, calMonth, d) > today;
+      const status = attendData[key] || '';
+      html += `<div class="cal-day ${status} ${isToday?'today':''} ${isFuture?'future':''}">${d}${status?'<div class="cal-dot"></div>':''}</div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  function changeMonth(dir) {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth=0; calYear++; }
+    if (calMonth < 0) { calMonth=11; calYear--; }
+    renderCalendar();
+  }
+
+  calYear = today.getFullYear(); calMonth = today.getMonth();
+  renderCalendar();
+
+  // ---- History Table ----
+  const history = [
+    { date:'2026-05-20', in:'09:02', out:'18:05', hrs:'9h 3m', status:'Present' },
+    { date:'2026-05-19', in:'09:15', out:'18:00', hrs:'8h 45m', status:'Present' },
+    { date:'2026-05-16', in:'09:30', out:'18:30', hrs:'9h 00m', status:'Present' },
+    { date:'2026-05-15', in:'–', out:'–', hrs:'–', status:'Absent' },
+    { date:'2026-05-14', in:'09:00', out:'18:10', hrs:'9h 10m', status:'Present' },
+    { date:'2026-05-13', in:'–', out:'–', hrs:'–', status:'Leave' },
+    { date:'2026-05-12', in:'09:10', out:'17:55', hrs:'8h 45m', status:'Present' },
+  ];
+  const statusB = s => {
+    const m = { Present:'badge-success', Absent:'badge-danger', Leave:'badge-warning' };
+    return `<span class="badge ${m[s]||'badge-neutral'}">${s}</span>`;
+  };
+  document.getElementById('attHistTable').innerHTML = history.map(h => `
+    <tr>
+      <td style="font-size:0.83rem;">${h.date}</td>
+      <td style="color:var(--success);font-weight:600;">${h.in}</td>
+      <td style="color:var(--danger);font-weight:600;">${h.out}</td>
+      <td style="font-weight:600;">${h.hrs}</td>
+      <td>${statusB(h.status)}</td>
+    </tr>`).join('');
+
+  // ---- Leave Apply ----
+  function applyLeave() {
+    const type = document.getElementById('leaveType').value;
+    const from = document.getElementById('leaveFrom').value;
+    const to = document.getElementById('leaveTo').value;
+    const msg = document.getElementById('leaveMsg');
+    if (!type || !from || !to) {
+      msg.style.display='block'; msg.className='alert alert-danger';
+      msg.innerHTML='<span class="alert-icon">❌</span><div>Please fill all required fields.</div>';
+      return;
+    }
+    msg.style.display='block'; msg.className='alert alert-success';
+    msg.innerHTML=`<span class="alert-icon">✅</span><div>Leave request submitted for <strong>${type}</strong> from <strong>${from}</strong> to <strong>${to}</strong>.</div>`;
+    setTimeout(() => { msg.style.display='none'; }, 5000);
+  }
+</script>
+</body>
+</html>

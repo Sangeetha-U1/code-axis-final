@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .activity-list { display: flex; flex-direction: column; gap: 14px; }
+    .activity-item { display: flex; gap: 14px; align-items: flex-start; }
+    .activity-line { display: flex; flex-direction: column; align-items: center; }
+    .activity-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); flex-shrink: 0; margin-top: 4px; }
+    .activity-connector { width: 2px; flex: 1; background: var(--border); min-height: 30px; margin-top: 4px; }
+    .activity-item:last-child .activity-connector { display: none; }
+    .activity-text { font-size: 0.85rem; color: var(--text-primary); line-height: 1.4; }
+    .activity-time { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+    .perf-row { display: flex; flex-direction: column; gap: 12px; }
+    .perf-item label { font-size: 0.82rem; color: var(--text-secondary); font-weight: 500; display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .welcome-bar { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); border-radius: var(--radius-lg); padding: 26px 32px; color: white; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; }
+    .welcome-bar h2 { font-family: var(--font-primary); font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; }
+    .welcome-bar p { font-size: 0.875rem; opacity: 0.85; }
+    .welcome-emoji { font-size: 3rem; }
+    canvas { max-height: 240px; }
+    .chart-card { padding: 22px; }
+    .top-employees { display: flex; flex-direction: column; gap: 12px; }
+    .emp-row { display: flex; align-items: center; gap: 12px; }
+    .emp-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+    .emp-info { flex: 1; }
+    .emp-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+    .emp-role { font-size: 0.75rem; color: var(--text-muted); }
+    .emp-score { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item active"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html" class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html" class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="login.html" class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content" id="mainContent">
+
+    <!-- TOP NAVBAR -->
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Dashboard</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Dashboard</span></div>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <div class="search-box" style="width:220px;">
+          <span>🔍</span>
+          <input type="text" placeholder="Search..." id="globalSearch" />
+        </div>
+        <button class="navbar-btn" id="darkModeToggle" title="Toggle Dark Mode">🌙</button>
+        <div class="dropdown" style="position:relative;">
+          <button class="navbar-btn" id="notifBtn" title="Notifications" style="position:relative;">
+            🔔
+            <span class="notification-dot"></span>
+          </button>
+          <div class="notification-panel" id="notifPanel">
+            <div class="notif-header">
+              <span style="font-weight:600;font-size:0.9rem;">Notifications</span>
+              <span style="font-size:0.75rem;color:var(--primary);cursor:pointer;">Mark all read</span>
+            </div>
+            <div class="notif-item unread">
+              <div class="notif-dot"></div>
+              <div class="notif-content">
+                <div class="notif-text">Praveen submitted attendance report</div>
+                <div class="notif-time">2 minutes ago</div>
+              </div>
+            </div>
+            <div class="notif-item unread">
+              <div class="notif-dot"></div>
+              <div class="notif-content">
+                <div class="notif-text">New employee Saireddy added</div>
+                <div class="notif-time">1 hour ago</div>
+              </div>
+            </div>
+            <div class="notif-item">
+              <div class="notif-dot" style="background:var(--border);"></div>
+              <div class="notif-content">
+                <div class="notif-text">Project "CodeAxis UI" deadline tomorrow</div>
+                <div class="notif-time">3 hours ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown" style="position:relative;">
+          <div class="user-avatar" id="userAvatarBtn">SG</div>
+          <div class="dropdown-menu" id="userMenu" style="min-width:180px;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+              <div style="font-weight:600;font-size:0.875rem;">Sangeetha</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">Dashboard Lead</div>
+            </div>
+            <a class="dropdown-item">👤 My Profile</a>
+            <a class="dropdown-item">⚙️ Settings</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content-area">
+
+      <!-- Welcome Bar -->
+
+      <!-- KPI Cards -->
+      <div class="grid grid-4 mb-24">
+        <div class="kpi-card">
+          <div class="kpi-icon">👥</div>
+          <div class="kpi-info">
+            <div class="kpi-value">48</div>
+            <div class="kpi-label">Total Employees</div>
+            <div class="kpi-change up">▲ 4 this month</div>
+          </div>
+        </div>
+        <div class="kpi-card success">
+          <div class="kpi-icon success">✅</div>
+          <div class="kpi-info">
+            <div class="kpi-value">42</div>
+            <div class="kpi-label">Present Today</div>
+            <div class="kpi-change up">▲ 87.5% rate</div>
+          </div>
+        </div>
+        <div class="kpi-card warning">
+          <div class="kpi-icon warning">📁</div>
+          <div class="kpi-info">
+            <div class="kpi-value">12</div>
+            <div class="kpi-label">Active Projects</div>
+            <div class="kpi-change up">▲ 3 new</div>
+          </div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-icon danger">⏰</div>
+          <div class="kpi-info">
+            <div class="kpi-value">18</div>
+            <div class="kpi-label">Pending Tasks</div>
+            <div class="kpi-change down">▼ 5 overdue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-2 mb-24">
+        <div class="card chart-card">
+          <div class="card-header">
+            <span class="card-title">📈 Monthly Attendance Overview</span>
+            <select style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.8rem;outline:none;">
+              <option>2026</option><option>2025</option>
+            </select>
+          </div>
+          <canvas id="attendanceChart"></canvas>
+        </div>
+        <div class="card chart-card">
+          <div class="card-header">
+            <span class="card-title">🍩 Project Status</span>
+            <span class="badge badge-primary">Live</span>
+          </div>
+          <canvas id="projectChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="grid grid-2 mb-24" style="grid-template-columns: 1.4fr 1fr;">
+        <!-- Activity Feed -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚡ Recent Activity</span>
+            <button class="btn btn-ghost btn-sm">View All</button>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-line"><div class="activity-dot"></div><div class="activity-connector"></div></div>
+              <div><div class="activity-text"><strong>Praveen</strong> completed Login UI task</div><div class="activity-time">Just now</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-line"><div class="activity-dot" style="background:var(--success)"></div><div class="activity-connector"></div></div>
+              <div><div class="activity-text"><strong>Raghuram</strong> submitted Employee Module</div><div class="activity-time">30 mins ago</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-line"><div class="activity-dot" style="background:var(--warning)"></div><div class="activity-connector"></div></div>
+              <div><div class="activity-text"><strong>Sangeetha</strong> updated Dashboard design</div><div class="activity-time">2 hours ago</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-line"><div class="activity-dot" style="background:var(--info)"></div><div class="activity-connector"></div></div>
+              <div><div class="activity-text">New employee <strong>Anitha</strong> onboarded</div><div class="activity-time">Today 9:00 AM</div></div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-line"><div class="activity-dot" style="background:var(--danger)"></div><div class="activity-connector"></div></div>
+              <div><div class="activity-text">Task <em>"API Integration"</em> marked overdue</div><div class="activity-time">Yesterday</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Indicators -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🏆 Performance</span>
+            <span class="badge badge-success">This Week</span>
+          </div>
+          <div class="perf-row mb-24">
+            <div class="perf-item">
+              <label>Task Completion <span style="color:var(--primary);">82%</span></label>
+              <div class="progress-bar"><div class="progress-fill" data-width="82%" style="width:0%"></div></div>
+            </div>
+            <div class="perf-item">
+              <label>Attendance Rate <span style="color:var(--success);">87%</span></label>
+              <div class="progress-bar"><div class="progress-fill success" data-width="87%" style="width:0%"></div></div>
+            </div>
+            <div class="perf-item">
+              <label>Project Progress <span style="color:var(--warning);">65%</span></label>
+              <div class="progress-bar"><div class="progress-fill warning" data-width="65%" style="width:0%"></div></div>
+            </div>
+            <div class="perf-item">
+              <label>Bug Resolution <span style="color:var(--danger);">45%</span></label>
+              <div class="progress-bar"><div class="progress-fill danger" data-width="45%" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="card-header" style="margin-top:8px;">
+            <span class="card-title">🥇 Top Performers</span>
+          </div>
+          <div class="top-employees">
+            <div class="emp-row">
+              <div class="emp-av" style="background:#4F46E5;">SG</div>
+              <div class="emp-info"><div class="emp-name">Sangeetha</div><div class="emp-role">Dashboard UI</div></div>
+              <div class="emp-score">98</div>
+            </div>
+            <div class="emp-row">
+              <div class="emp-av" style="background:#22C55E;">PR</div>
+              <div class="emp-info"><div class="emp-name">Praveen</div><div class="emp-role">Auth Systems</div></div>
+              <div class="emp-score">95</div>
+            </div>
+            <div class="emp-row">
+              <div class="emp-av" style="background:#F59E0B;">SR</div>
+              <div class="emp-info"><div class="emp-name">Saireddy</div><div class="emp-role">Module UI</div></div>
+              <div class="emp-score">91</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts Section -->
+      <div class="alert alert-warning">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content">
+          <div class="alert-title">Deadline Reminder</div>
+          5 tasks are due tomorrow. Please ensure completion before EOD.
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main-content -->
+</div>
+
+<script src="main.js"></script>
+<script>
+  // Charts
+  const attCtx = document.getElementById('attendanceChart').getContext('2d');
+  new Chart(attCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      datasets: [
+        { label: 'Present', data: [38,40,42,39,42,41,43,44,40,41,42,43], backgroundColor: '#4F46E5', borderRadius: 6 },
+        { label: 'Absent', data: [10,8,6,9,6,7,5,4,8,7,6,5], backgroundColor: '#EEF2FF', borderRadius: 6 }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#F3F4F6' }, beginAtZero: true } } }
+  });
+
+  const projCtx = document.getElementById('projectChart').getContext('2d');
+  new Chart(projCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Completed', 'In Progress', 'On Hold', 'Not Started'],
+      datasets: [{ data: [5, 4, 2, 1], backgroundColor: ['#22C55E','#4F46E5','#F59E0B','#EF4444'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+  });
+</script>
+</body>
+</html>

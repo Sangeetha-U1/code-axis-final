@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications – CodeAxis</title>
+  <link rel="stylesheet" href="design-system.css"/>
+  <style>
+    /* ---- NOTIFICATION PAGE STYLES ---- */
+    .notif-page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .notif-tabs {
+      display: flex; gap: 6px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 5px;
+    }
+    .notif-tab {
+      padding: 8px 18px; border-radius: var(--radius-md); font-size: 0.85rem;
+      font-weight: 500; cursor: pointer; color: var(--text-secondary);
+      transition: var(--transition); border: none; background: none;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .notif-tab.active {
+      background: var(--surface); color: var(--primary);
+      font-weight: 600; box-shadow: var(--shadow-sm);
+    }
+    .notif-tab .tab-count {
+      background: var(--primary); color: white;
+      font-size: 0.68rem; font-weight: 700;
+      padding: 1px 6px; border-radius: var(--radius-full);
+    }
+    .notif-tab.active .tab-count { background: var(--primary); }
+    .notif-tab:not(.active) .tab-count { background: var(--border); color: var(--text-muted); }
+
+    /* Notification Feed */
+    .notif-feed { display: flex; flex-direction: column; gap: 0; }
+
+    .notif-group-label {
+      font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 14px 0 8px;
+    }
+
+    .notif-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 18px 20px;
+      display: flex; align-items: flex-start; gap: 16px;
+      margin-bottom: 10px; transition: var(--transition);
+      cursor: pointer; position: relative; overflow: hidden;
+    }
+    .notif-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .notif-card.unread { border-left: 3px solid var(--primary); background: var(--primary-bg); }
+    .notif-card.unread:hover { background: #E8E4FF; }
+
+    .notif-card-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .notif-card-icon.primary { background: var(--primary-bg); }
+    .notif-card-icon.success { background: var(--success-light); }
+    .notif-card-icon.warning { background: var(--warning-light); }
+    .notif-card-icon.danger  { background: var(--danger-light); }
+    .notif-card-icon.info    { background: var(--info-light); }
+
+    .notif-card-body { flex: 1; min-width: 0; }
+    .notif-card-title {
+      font-size: 0.9rem; font-weight: 600; color: var(--text-primary);
+      margin-bottom: 4px; line-height: 1.35;
+    }
+    .notif-card-desc {
+      font-size: 0.82rem; color: var(--text-secondary);
+      line-height: 1.5; margin-bottom: 8px;
+    }
+    .notif-card-meta {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .notif-card-time { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    .notif-card-source { font-size: 0.75rem; color: var(--primary); font-weight: 500; }
+
+    .notif-card-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+    .unread-dot { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; }
+    .notif-action-btn {
+      font-size: 0.75rem; color: var(--text-muted);
+      border: none; background: none; cursor: pointer; padding: 3px 6px;
+      border-radius: var(--radius-sm); transition: var(--transition-fast);
+    }
+    .notif-action-btn:hover { background: var(--bg); color: var(--danger); }
+
+    /* Summary Panel */
+    .notif-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 18px 16px;
+      text-align: center; transition: var(--transition);
+    }
+    .summary-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .summary-num {
+      font-family: var(--font-primary); font-size: 1.8rem;
+      font-weight: 700; line-height: 1.1; margin-bottom: 4px;
+    }
+    .summary-lbl { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; }
+
+    /* Preferences Panel */
+    .pref-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 22px 24px;
+    }
+    .pref-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .pref-row:last-child { border-bottom: none; padding-bottom: 0; }
+    
+    .pref-name { font-size: 0.875rem; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; }
+    .pref-desc { font-size: 0.78rem; color: var(--text-secondary); }
+    .toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: var(--border);
+      border-radius: var(--radius-full); cursor: pointer; transition: var(--transition);
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 18px; height: 18px; left: 3px; bottom: 3px;
+      background: white; border-radius: 50%; transition: var(--transition);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .empty-state .empty-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--bg); display: flex; align-items: center;
+      justify-content: center; font-size: 2rem; margin-bottom: 8px;
+    }
+    .empty-state h3 { font-family: var(--font-primary); font-size: 1.1rem; font-weight: 700; }
+    .empty-state p { font-size: 0.875rem; color: var(--text-secondary); max-width: 300px; line-height: 1.6; }
+
+    /* Tab Panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    @media (max-width: 768px) {
+      .notif-summary { grid-template-columns: repeat(2, 1fr); }
+      .notif-tabs { flex-wrap: wrap; }
+    }
+    @media (max-width: 480px) {
+      .notif-summary { grid-template-columns: 1fr 1fr; }
+      .notif-card { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="CodeAxis" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
+      <span class="sidebar-logo-text">CodeAxis</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Main</div>
+      <a href="dashboard-light.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a href="employees.html"        class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Employees</span><span class="nav-badge">12</span></a>
+      <a href="attendance.html"       class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">Attendance</span></a>
+      <a href="projects.html"         class="nav-item"><span class="nav-icon">📁</span><span class="nav-label">Projects</span></a>
+      <a href="tasks.html"            class="nav-item"><span class="nav-icon">✅</span><span class="nav-label">Tasks</span><span class="nav-badge">5</span></a>
+      <div class="nav-section-title">Analytics</div>
+      <a href="reports.html"         class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></a>
+      <div class="nav-section-title">Account</div>
+      <a href="notifications.html" class="nav-item active"><span class="nav-icon">🔔</span><span class="nav-label">Notifications</span><span class="nav-badge">7</span></a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="nav-item"><span class="nav-icon">🚪</span><span class="nav-label">Logout</span></a>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="mainContent">
+
+    <!-- TOP NAVBAR -->
+    <nav class="top-navbar" id="topNavbar">
+      <div class="navbar-left">
+        <button class="navbar-btn" id="sidebarToggle">☰</button>
+        <div>
+          <div class="navbar-title">Notifications</div>
+          <div class="breadcrumb"><span>Home</span><span>›</span><span class="active">Notifications</span></div>
+        </div>
+      </div>
+      <div class="navbar-right" style="position:relative;">
+        <button class="navbar-btn" id="darkModeToggle">🌙</button>
+        <button class="navbar-btn" id="notifBtn" style="position:relative;">
+          🔔<span class="notification-dot"></span>
+        </button>
+        <div class="user-avatar" id="userAvatarBtn">SG</div>
+        <div class="dropdown-menu" id="userMenu">
+          <div class="dropdown-item">👤 My Profile</div>
+          <div class="dropdown-item">⚙️ Settings</div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="login.html">🚪 Logout</a>
+        </div>
+        <div class="notification-panel" id="notifPanel">
+          <div class="notif-header">
+            <span style="font-weight:600;font-size:0.9rem;">Quick Alerts</span>
+            <span style="font-size:0.78rem;color:var(--primary);cursor:pointer;">Mark all read</span>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-dot"></div>
+            <div class="notif-content">
+              <div class="notif-text">Sangeetha submitted a new report</div>
+              <div class="notif-time">2 min ago</div>
+            </div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-dot"></div>
+            <div class="notif-content">
+              <div class="notif-text">Task "UI Redesign" marked complete</div>
+              <div class="notif-time">15 min ago</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot" style="background:transparent;border:2px solid var(--border);"></div>
+            <div class="notif-content">
+              <div class="notif-text">3 employees marked absent today</div>
+              <div class="notif-time">1 hour ago</div>
+            </div>
+          </div>
+          <div style="padding:12px 18px;text-align:center;">
+            <a href="notifications.html" style="font-size:0.82rem;color:var(--primary);font-weight:600;">View all notifications →</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <div class="content-area">
+
+      <!-- Page Header -->
+      <div class="notif-page-header">
+        <div>
+          <div class="page-title">Notifications</div>
+          <div class="page-subtitle">Stay updated with all platform activities and alerts</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="markAllRead()">✅ Mark All Read</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearAll()">🗑️ Clear All</button>
+          <button class="btn btn-primary btn-sm" onclick="switchTab('preferences')">⚙️ Preferences</button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="notif-summary">
+        <div class="summary-card">
+          <div class="summary-num" style="color:var(--primary);" id="totalCount">14</div>
+          <div class="summary-lbl">Total Today</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" style="color:var(--danger);" id="unreadCount">7</div>
+          <div class="summary-lbl">Unread</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" style="color:var(--success);">3</div>
+          <div class="summary-lbl">Actions Done</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" style="color:var(--warning);">4</div>
+          <div class="summary-lbl">Pending Action</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div class="notif-tabs" id="tabBar">
+          <button class="notif-tab active" onclick="switchTab('all')"   id="tab-all">All <span class="tab-count">14</span></button>
+          <button class="notif-tab"        onclick="switchTab('unread')" id="tab-unread">Unread <span class="tab-count">7</span></button>
+          <button class="notif-tab"        onclick="switchTab('tasks')"  id="tab-tasks">Tasks <span class="tab-count">4</span></button>
+          <button class="notif-tab"        onclick="switchTab('hr')"     id="tab-hr">HR &amp; Attendance <span class="tab-count">3</span></button>
+          <button class="notif-tab"        onclick="switchTab('system')" id="tab-system">System <span class="tab-count">3</span></button>
+          <button class="notif-tab"        onclick="switchTab('preferences')" id="tab-preferences">⚙️ Preferences</button>
+        </div>
+      </div>
+
+      <!-- ======= TAB: ALL ======= -->
+      <div class="tab-panel active" id="panel-all">
+        <div class="notif-feed" id="notifFeed">
+
+          <div class="notif-group-label">🕒 Just Now</div>
+
+          <!-- Card 1 -->
+          <div class="notif-card unread" id="nc1">
+            <div class="notif-card-icon primary">📝</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">New Task Assigned: Dashboard Redesign</div>
+              <div class="notif-card-desc">You have been assigned a new task <strong>"Dashboard Redesign"</strong> by Sangeetha. Priority: High. Deadline: May 28, 2026.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 2 minutes ago</span>
+                <span class="notif-card-source">📁 Tasks</span>
+                <button class="btn btn-primary btn-sm" style="padding:4px 12px;font-size:0.75rem;" onclick="markRead('nc1')">View Task</button>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc1')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="notif-card unread" id="nc2">
+            <div class="notif-card-icon success">✅</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Task Completed: Login UI</div>
+              <div class="notif-card-desc">Praveen marked the task <strong>"Login UI Redesign"</strong> as completed. All acceptance criteria have been met.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 8 minutes ago</span>
+                <span class="notif-card-source">✅ Tasks</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc2')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="notif-group-label">📅 Today</div>
+
+          <!-- Card 3 -->
+          <div class="notif-card unread" id="nc3">
+            <div class="notif-card-icon warning">⚠️</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Attendance Alert: 3 Employees Absent</div>
+              <div class="notif-card-desc">Kiran, Anitha, and Ravi have not marked attendance today. Please review and take necessary action.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 1 hour ago</span>
+                <span class="notif-card-source">📋 Attendance</span>
+                <button class="btn btn-outline btn-sm" style="padding:4px 12px;font-size:0.75rem;">Review</button>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc3')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="notif-card unread" id="nc4">
+            <div class="notif-card-icon primary">📊</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Monthly Report Generated</div>
+              <div class="notif-card-desc">The April 2026 performance report has been auto-generated. Overall team efficiency: <strong>86%</strong> — up 4% from last month.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 2 hours ago</span>
+                <span class="notif-card-source">📊 Reports</span>
+                <button class="btn btn-primary btn-sm" style="padding:4px 12px;font-size:0.75rem;">View Report</button>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc4')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="notif-card unread" id="nc5">
+            <div class="notif-card-icon info">👤</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">New Employee Registration</div>
+              <div class="notif-card-desc"><strong>Meena Sharma</strong> has registered and is awaiting admin activation. Department: Design. Role: Employee.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 3 hours ago</span>
+                <span class="notif-card-source">👥 Employees</span>
+                <button class="btn btn-success btn-sm" style="padding:4px 12px;font-size:0.75rem;">Approve</button>
+                <button class="btn btn-ghost btn-sm" style="padding:4px 12px;font-size:0.75rem;color:var(--danger);">Reject</button>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc5')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 6 -->
+          <div class="notif-card unread" id="nc6">
+            <div class="notif-card-icon danger">🔴</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Project Deadline Approaching</div>
+              <div class="notif-card-desc">Project <strong>"CodeAxis Frontend"</strong> deadline is in 3 days (May 24, 2026). Current completion: 72%. Please review sprint progress.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 4 hours ago</span>
+                <span class="notif-card-source">📁 Projects</span>
+                <button class="btn btn-primary btn-sm" style="padding:4px 12px;font-size:0.75rem;">View Project</button>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc6')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 7 -->
+          <div class="notif-card unread" id="nc7">
+            <div class="notif-card-icon success">🎉</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Work Anniversary: Praveen</div>
+              <div class="notif-card-desc">Today marks Praveen's <strong>1-year work anniversary</strong> at Fusion5 Technologies! Don't forget to congratulate him. 🎊</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ 5 hours ago</span>
+                <span class="notif-card-source">🎉 HR</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <div class="unread-dot"></div>
+              <button class="notif-action-btn" onclick="dismissCard('nc7')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="notif-group-label">📆 Yesterday</div>
+
+          <!-- Card 8 (read) -->
+          <div class="notif-card" id="nc8">
+            <div class="notif-card-icon info">🔒</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Security: New Login Detected</div>
+              <div class="notif-card-desc">A new login was detected from <strong>Hyderabad, IN</strong> on Chrome/Windows. If this wasn't you, please reset your password.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ Yesterday, 9:42 PM</span>
+                <span class="notif-card-source">🔒 Security</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc8')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 9 (read) -->
+          <div class="notif-card" id="nc9">
+            <div class="notif-card-icon success">📦</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Project Milestone Reached</div>
+              <div class="notif-card-desc">Project <strong>"Mobile App UI"</strong> has reached the 50% milestone. Phase 1 components have been approved by the client.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ Yesterday, 3:15 PM</span>
+                <span class="notif-card-source">📁 Projects</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc9')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 10 (read) -->
+          <div class="notif-card" id="nc10">
+            <div class="notif-card-icon warning">⏰</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Task Overdue: API Integration</div>
+              <div class="notif-card-desc">Task <strong>"API Integration Module"</strong> was due yesterday (May 20). It is still marked In Progress. Assigned to: Saireddy Raghuram.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ Yesterday, 11:59 PM</span>
+                <span class="notif-card-source">✅ Tasks</span>
+                <button class="btn btn-outline btn-sm" style="padding:4px 12px;font-size:0.75rem;">Send Reminder</button>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc10')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="notif-group-label">📅 Earlier This Week</div>
+
+          <!-- Card 11 (read) -->
+          <div class="notif-card" id="nc11">
+            <div class="notif-card-icon primary">💬</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Comment on Your Task</div>
+              <div class="notif-card-desc">Sangeetha left a comment on your task: <em>"Great progress! Please add responsive breakpoints before final submission."</em></div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ May 19, 2026</span>
+                <span class="notif-card-source">✅ Tasks</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc11')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 12 (read) -->
+          <div class="notif-card" id="nc12">
+            <div class="notif-card-icon info">🖥️</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">System Update Completed</div>
+              <div class="notif-card-desc">Platform maintenance completed successfully. All modules are online. Uptime: 99.9%. New features: Dark mode improvements and notification center.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ May 18, 2026</span>
+                <span class="notif-card-source">🖥️ System</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc12')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 13 (read) -->
+          <div class="notif-card" id="nc13">
+            <div class="notif-card-icon success">✨</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Leave Request Approved</div>
+              <div class="notif-card-desc">Your leave request for <strong>May 26–27, 2026</strong> has been approved by HR. Have a great break! 🌟</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ May 17, 2026</span>
+                <span class="notif-card-source">🎉 HR</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc13')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Card 14 (read) -->
+          <div class="notif-card" id="nc14">
+            <div class="notif-card-icon warning">📣</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Announcement: Team Standup Reschedule</div>
+              <div class="notif-card-desc">The daily standup for this week has been moved from 9:00 AM to 10:00 AM IST due to client sync calls. Updated in team calendar.</div>
+              <div class="notif-card-meta">
+                <span class="notif-card-time">⏱️ May 17, 2026</span>
+                <span class="notif-card-source">📣 Announcements</span>
+              </div>
+            </div>
+            <div class="notif-card-actions">
+              <button class="notif-action-btn" onclick="dismissCard('nc14')" title="Dismiss">✕</button>
+            </div>
+          </div>
+
+        </div><!-- /notif-feed -->
+      </div><!-- /panel-all -->
+
+      <!-- ======= TAB: UNREAD ======= -->
+      <div class="tab-panel" id="panel-unread">
+        <div id="unreadFeed"></div>
+      </div>
+
+      <!-- ======= TAB: TASKS ======= -->
+      <div class="tab-panel" id="panel-tasks">
+        <div class="notif-feed">
+          <div class="notif-group-label">Task Notifications</div>
+          <div class="notif-card unread">
+            <div class="notif-card-icon primary">📝</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">New Task Assigned: Dashboard Redesign</div>
+              <div class="notif-card-desc">Assigned by Sangeetha. Priority: High. Deadline: May 28, 2026.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ 2 min ago</span><span class="notif-card-source">📁 Tasks</span></div>
+            </div>
+            <div class="notif-card-actions"><div class="unread-dot"></div></div>
+          </div>
+          <div class="notif-card unread">
+            <div class="notif-card-icon success">✅</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Task Completed: Login UI</div>
+              <div class="notif-card-desc">Praveen marked "Login UI Redesign" as completed.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ 8 min ago</span><span class="notif-card-source">✅ Tasks</span></div>
+            </div>
+            <div class="notif-card-actions"><div class="unread-dot"></div></div>
+          </div>
+          <div class="notif-card">
+            <div class="notif-card-icon warning">⏰</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Task Overdue: API Integration</div>
+              <div class="notif-card-desc">Task was due May 20. Still In Progress. Assigned to: Saireddy Raghuram.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ Yesterday</span><span class="notif-card-source">✅ Tasks</span></div>
+            </div>
+          </div>
+          <div class="notif-card">
+            <div class="notif-card-icon primary">💬</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Comment on Your Task</div>
+              <div class="notif-card-desc">Sangeetha left a comment: "Great progress! Please add responsive breakpoints."</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ May 19</span><span class="notif-card-source">✅ Tasks</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= TAB: HR ======= -->
+      <div class="tab-panel" id="panel-hr">
+        <div class="notif-feed">
+          <div class="notif-group-label">HR & Attendance Notifications</div>
+          <div class="notif-card unread">
+            <div class="notif-card-icon warning">⚠️</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Attendance Alert: 3 Employees Absent</div>
+              <div class="notif-card-desc">Kiran, Anitha, and Ravi have not marked attendance today.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ 1 hour ago</span><span class="notif-card-source">📋 Attendance</span></div>
+            </div>
+            <div class="notif-card-actions"><div class="unread-dot"></div></div>
+          </div>
+          <div class="notif-card unread">
+            <div class="notif-card-icon success">🎉</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Work Anniversary: Praveen</div>
+              <div class="notif-card-desc">Today marks Praveen's 1-year work anniversary at Fusion5 Technologies!</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ 5 hours ago</span><span class="notif-card-source">🎉 HR</span></div>
+            </div>
+            <div class="notif-card-actions"><div class="unread-dot"></div></div>
+          </div>
+          <div class="notif-card">
+            <div class="notif-card-icon success">✨</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Leave Request Approved</div>
+              <div class="notif-card-desc">Your leave for May 26–27, 2026 has been approved by HR.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ May 17</span><span class="notif-card-source">🎉 HR</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= TAB: SYSTEM ======= -->
+      <div class="tab-panel" id="panel-system">
+        <div class="notif-feed">
+          <div class="notif-group-label">System Notifications</div>
+          <div class="notif-card">
+            <div class="notif-card-icon info">🔒</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Security: New Login Detected</div>
+              <div class="notif-card-desc">New login from Hyderabad, IN on Chrome/Windows. If this wasn't you, reset your password.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ Yesterday</span><span class="notif-card-source">🔒 Security</span></div>
+            </div>
+          </div>
+          <div class="notif-card">
+            <div class="notif-card-icon info">🖥️</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">System Update Completed</div>
+              <div class="notif-card-desc">Platform maintenance completed. Uptime: 99.9%. New: Dark mode improvements and notification center.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ May 18</span><span class="notif-card-source">🖥️ System</span></div>
+            </div>
+          </div>
+          <div class="notif-card">
+            <div class="notif-card-icon warning">📣</div>
+            <div class="notif-card-body">
+              <div class="notif-card-title">Announcement: Standup Reschedule</div>
+              <div class="notif-card-desc">Daily standup moved from 9:00 AM to 10:00 AM IST for this week.</div>
+              <div class="notif-card-meta"><span class="notif-card-time">⏱️ May 17</span><span class="notif-card-source">📣 Announcements</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======= TAB: PREFERENCES ======= -->
+      <div class="tab-panel" id="panel-preferences">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-header"><span class="card-title">📧 Email Notifications</span></div>
+              <div class="pref-card" style="border:none;padding:0;">
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Task Assignments</div><div class="pref-desc">Get emailed when a task is assigned to you</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Task Completions</div><div class="pref-desc">When your assigned tasks are marked done</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Project Updates</div><div class="pref-desc">Milestones, deadline changes, status updates</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Attendance Alerts</div><div class="pref-desc">Daily summary of absent / late employees</div></div>
+                  <label class="toggle-switch"><input type="checkbox" /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Performance Reports</div><div class="pref-desc">Monthly report generation alerts</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Security Alerts</div><div class="pref-desc">Login from new device or location</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div class="card-header"><span class="card-title">🔔 In-App Notifications</span></div>
+              <div class="pref-card" style="border:none;padding:0;">
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Real-time Bell Alerts</div><div class="pref-desc">Show badge count on notification bell</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Sound Alerts</div><div class="pref-desc">Play sound for high-priority notifications</div></div>
+                  <label class="toggle-switch"><input type="checkbox" /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Desktop Push Notifications</div><div class="pref-desc">Browser push alerts when tab is in background</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">HR & Leave Updates</div><div class="pref-desc">Leave approvals, rejections, announcements</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">System Announcements</div><div class="pref-desc">Platform updates, maintenance windows</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-info"><div class="pref-name">Birthday & Anniversaries</div><div class="pref-desc">Employee milestones and celebrations</div></div>
+                  <label class="toggle-switch"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="grid-column:1/-1;">
+            <div class="card">
+              <div class="card-header"><span class="card-title">⏰ Notification Digest</span></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding-top:4px;">
+                <div>
+                  <label class="form-label">Digest Frequency</label>
+                  <select class="form-control" style="width:100%;">
+                    <option>Real-time</option>
+                    <option>Every Hour</option>
+                    <option selected>Daily Summary</option>
+                    <option>Weekly Digest</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">Daily Digest Time</label>
+                  <input type="time" class="form-control" value="08:00" />
+                </div>
+                <div>
+                  <label class="form-label">Quiet Hours</label>
+                  <select class="form-control">
+                    <option>Disabled</option>
+                    <option selected>10 PM – 8 AM</option>
+                    <option>11 PM – 7 AM</option>
+                    <option>Weekends Only</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm">Reset Defaults</button>
+                <button class="btn btn-primary btn-sm" onclick="savePrefs()">💾 Save Preferences</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /panel-preferences -->
+
+    </div><!-- /content-area -->
+  </div><!-- /main-content -->
+</div><!-- /app-wrapper -->
+
+<!-- Toast Container -->
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;"></div>
+
+<script src="main.js"></script>
+<script>
+  /* ---- TAB SWITCHING ---- */
+  function switchTab(name) {
+    document.querySelectorAll('.notif-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const tabEl = document.getElementById('tab-' + name);
+    const panelEl = document.getElementById('panel-' + name);
+    if (tabEl) tabEl.classList.add('active');
+    if (panelEl) panelEl.classList.add('active');
+
+    // Build unread panel dynamically
+    if (name === 'unread') buildUnreadPanel();
+  }
+
+  /* ---- BUILD UNREAD PANEL ---- */
+  function buildUnreadPanel() {
+    const unread = document.querySelectorAll('#panel-all .notif-card.unread');
+    const container = document.getElementById('unreadFeed');
+    if (unread.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎉</div>
+          <h3>All Caught Up!</h3>
+          <p>No unread notifications. You're up to date with everything on the platform.</p>
+        </div>`;
+    } else {
+      container.innerHTML = '<div class="notif-group-label">Unread Notifications</div>';
+      unread.forEach(card => {
+        container.appendChild(card.cloneNode(true));
+      });
+    }
+  }
+
+  /* ---- MARK READ ---- */
+  function markRead(id) {
+    const card = document.getElementById(id);
+    if (card) {
+      card.classList.remove('unread');
+      const dot = card.querySelector('.unread-dot');
+      if (dot) dot.remove();
+      updateCounts();
+    }
+  }
+
+  /* ---- DISMISS CARD ---- */
+  function dismissCard(id) {
+    const card = document.getElementById(id);
+    if (card) {
+      card.style.transition = 'all 0.3s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(30px)';
+      setTimeout(() => { card.remove(); updateCounts(); }, 300);
+    }
+  }
+
+  /* ---- MARK ALL READ ---- */
+  function markAllRead() {
+    document.querySelectorAll('.notif-card.unread').forEach(card => {
+      card.classList.remove('unread');
+      const dot = card.querySelector('.unread-dot');
+      if (dot) dot.remove();
+    });
+    updateCounts();
+    showToast('All notifications marked as read ✅', 'success');
+  }
+
+  /* ---- CLEAR ALL ---- */
+  function clearAll() {
+    if (!confirm('Clear all notifications? This cannot be undone.')) return;
+    const cards = document.querySelectorAll('#panel-all .notif-card');
+    cards.forEach((card, i) => {
+      setTimeout(() => {
+        card.style.transition = 'all 0.2s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(30px)';
+        setTimeout(() => card.remove(), 200);
+      }, i * 50);
+    });
+    setTimeout(() => {
+      document.getElementById('notifFeed').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔔</div>
+          <h3>No Notifications</h3>
+          <p>You have cleared all notifications. New ones will appear here as they arrive.</p>
+        </div>`;
+      updateCounts(true);
+    }, cards.length * 50 + 300);
+  }
+
+  /* ---- UPDATE COUNTS ---- */
+  function updateCounts(cleared = false) {
+    if (cleared) {
+      document.getElementById('totalCount').textContent = '0';
+      document.getElementById('unreadCount').textContent = '0';
+      return;
+    }
+    const total = document.querySelectorAll('#panel-all .notif-card').length;
+    const unread = document.querySelectorAll('#panel-all .notif-card.unread').length;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('unreadCount').textContent = unread;
+    const unreadTabCount = document.querySelector('#tab-unread .tab-count');
+    if (unreadTabCount) unreadTabCount.textContent = unread;
+  }
+
+  /* ---- SAVE PREFERENCES ---- */
+  function savePrefs() {
+    showToast('Notification preferences saved! 💾', 'success');
+  }
+
+  /* ---- TOAST ---- */
+  function showToast(msg, type = 'success') {
+    const colors = { success: '#22C55E', danger: '#EF4444', info: '#3B82F6' };
+    const toast = document.createElement('div');
+    toast.style.cssText = `background:${colors[type]};color:white;padding:12px 20px;
+      border-radius:10px;font-size:0.875rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);
+      animation:slideIn 0.3s ease;display:flex;align-items:center;gap:8px;`;
+    toast.textContent = msg;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
+  }
+
+  /* Add slideIn keyframe */
+  const style = document.createElement('style');
+  style.textContent = '@keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }';
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
