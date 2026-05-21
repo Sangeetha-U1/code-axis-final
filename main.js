@@ -27,7 +27,109 @@ overlay && overlay.addEventListener('click', () => {
   sidebar && sidebar.classList.remove('mobile-open');
   overlay && overlay.classList.remove('active');
 });
+// ================= MODALS =================
+function openModal(id) {
+  document.getElementById(id).style.display = "flex";
+}
 
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+// Close modal when clicking outside
+document.querySelectorAll(".modal-overlay").forEach(modal => {
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+});
+
+// ================= TOAST =================
+const CodeAxis = {
+  toast(message, type = "success") {
+    const toast = document.createElement("div");
+
+    toast.innerText = message;
+
+    toast.style.position = "fixed";
+    toast.style.top = "20px";
+    toast.style.right = "20px";
+    toast.style.padding = "12px 18px";
+    toast.style.borderRadius = "8px";
+    toast.style.color = "#fff";
+    toast.style.fontWeight = "600";
+    toast.style.zIndex = "9999";
+    toast.style.boxShadow = "0 4px 10px rgba(0,0,0,0.15)";
+    toast.style.transition = "0.3s";
+
+    if (type === "success") {
+      toast.style.background = "#22C55E";
+    } else if (type === "danger") {
+      toast.style.background = "#EF4444";
+    } else {
+      toast.style.background = "#4F46E5";
+    }
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+
+    }, 2500);
+  }
+};
+
+// ================= DARK MODE =================
+const darkModeToggle = document.getElementById("darkModeToggle");
+
+if (darkModeToggle) {
+  darkModeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+  });
+}
+
+// ================= USER MENU =================
+const userBtn = document.getElementById("userAvatarBtn");
+const userMenu = document.getElementById("userMenu");
+
+if (userBtn && userMenu) {
+  userBtn.addEventListener("click", () => {
+    userMenu.classList.toggle("show");
+  });
+}
+
+// ================= NOTIFICATIONS =================
+const notifBtn = document.getElementById("notifBtn");
+const notifPanel = document.getElementById("notifPanel");
+
+if (notifBtn && notifPanel) {
+  notifBtn.addEventListener("click", () => {
+    notifPanel.classList.toggle("show");
+  });
+}
+
+// ================= SIDEBAR =================
+const sidebarToggle = document.getElementById("sidebarToggle");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+
+if (sidebarToggle && sidebar && overlay) {
+
+  sidebarToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("show");
+  });
+
+  overlay.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
+  });
+}
 // ---- NOTIFICATIONS ----
 const notifBtn = document.getElementById('notifBtn');
 const notifPanel = document.getElementById('notifPanel');
