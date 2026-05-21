@@ -179,3 +179,24 @@ function animateProgressBars() {
   });
 }
 document.addEventListener('DOMContentLoaded', animateProgressBars);
+// Global Search Functionality
+const searchInput = document.getElementById("globalSearch");
+
+searchInput.addEventListener("keyup", function () {
+  const filter = searchInput.value.toLowerCase();
+
+  // Select searchable items
+  const items = document.querySelectorAll(
+    ".nav-item, .kpi-card, .activity-item, .emp-row"
+  );
+
+  items.forEach(item => {
+    const text = item.innerText.toLowerCase();
+
+    if (text.includes(filter)) {
+      item.style.display = "";
+    } else {
+      item.style.display = "none";
+    }
+  });
+});
