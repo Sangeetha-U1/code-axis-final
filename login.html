@@ -215,7 +215,7 @@
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('successMsg').style.display = 'block';
     setTimeout(() => { document.getElementById('redirectProgress').style.width = '100%'; }, 100);
-    setTimeout(() => { window.location.href = '../sangeetha/dashboard-light.html'; }, 2200);
+    setTimeout(() => { window.location.href = 'index.html'; }, 2200);
   }
 
   document.getElementById('loginPassword').addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
